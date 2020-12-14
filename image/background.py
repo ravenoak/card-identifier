@@ -31,30 +31,33 @@ def range_placement(
         x_zero = 0
     else:
         range_x = int(bg_size[0] - (img_size[0] * slop))
-        x_zero = 0 - int(img_size[0] * slop)
+        x_zero = 0 - int(img_size[0] * (1 - slop))
+
     if img_size[1] * slop > bg_size[1]:
         range_y = 0
         y_zero = 0
     else:
         range_y = int(bg_size[1] - (img_size[1] * slop))
-        y_zero = 0 - int(img_size[1] * slop)
+        y_zero = 0 - int(img_size[1] * (1 - slop))
+
     for x in range(x_zero, range_x + 1, x_step):
         for y in range(y_zero, range_y + 1, y_step):
             if step_wobble is not None:
                 x_wobble = x_step * random.uniform(0,
                                                    step_wobble) * \
                            random.choice(
-                    [1, -1])
+                               [1, -1])
                 y_wobble = y_step * random.uniform(0,
                                                    step_wobble) * \
                            random.choice(
-                    [1, -1])
+                               [1, -1])
                 x += int(x_wobble)
                 y += int(y_wobble)
-            yield (x, y), f"pos-x{x}y{y}"
+            yield (x, y), f"pos-x{x:0=+4}y{y:0=+4}"
 
 
-def mk_background(size: tuple, bg_color: tuple) -> (Image.Image, str):
+def mk_background(size: Tuple[int, int], bg_color: Tuple[int, int, int]) -> (
+Image.Image, str):
     return (
         Image.new("RGB", size, bg_color),
-        f"bg-r{bg_color[0]}g{bg_color[1]}b{bg_color[2]}")
+        f"bg-r{bg_color[0]:03}g{bg_color[1]:03}b{bg_color[2]:03}")
