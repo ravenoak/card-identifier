@@ -4,7 +4,7 @@ from typing import List
 import requests
 from pokemontcgsdk import Card
 
-from main import get_image_dir, get_pickle_dir
+from card_identifier.data import get_image_dir, get_pickle_dir
 
 
 def download_cards() -> List[Card]:

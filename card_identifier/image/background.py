@@ -57,7 +57,7 @@ def range_placement(
 
 
 def mk_background(size: Tuple[int, int], bg_color: Tuple[int, int, int]) -> (
-Image.Image, str):
+        Image.Image, str):
     return (
         Image.new("RGB", size, bg_color),
         f"bg-r{bg_color[0]:03}g{bg_color[1]:03}b{bg_color[2]:03}")

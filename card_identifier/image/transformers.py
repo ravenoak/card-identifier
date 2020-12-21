@@ -5,9 +5,10 @@ from PIL.Image import Image
 from PIL import ImageOps
 
 
-def random_resize(img: Image, resize_percent: float=0.3) -> Tuple[Image, str]:
+def random_resize(img: Image, resize_percent: float = 0.3) -> Tuple[
+    Image, str]:
     resize = random.randint(int(100 - (resize_percent * 100)),
-                            int(100 + (resize_percent * 100 ))) / 100
+                            int(100 + (resize_percent * 100))) / 100
     # resize = random.uniform(1 - resize_percent, 1 + resize_percent)
     x = int(img.size[0] * resize)
     y = int(img.size[1] * resize)
@@ -18,7 +19,8 @@ def range_rotate(img: Image, bg_color: Tuple[int, int, int]) -> Tuple[
     Image, str]:
     # 15 positions
     for deg in range(0, 360, 24):
-        yield img.rotate(deg, expand=True, fillcolor=bg_color), f"rotate-{deg:03d}"
+        yield img.rotate(deg, expand=True,
+                         fillcolor=bg_color), f"rotate-{deg:03d}"
 
 
 def range_autocontrast(img: Image) -> Tuple[Image, str]:

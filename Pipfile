@@ -4,15 +4,18 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+click = "*"
 numpy = "*"
 pandas = "*"
 pillow = "*"
 pokemontcgsdk = "*"
 requests = "*"
 scikit-image = "*"
+torch = "*"
 
 [dev-packages]
 jupyter = "*"
+torchvision = "*"
 
 [requires]
 python_version = "3.8"
