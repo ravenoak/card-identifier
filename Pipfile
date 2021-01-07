@@ -4,18 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+card-identifier = {editable = true, path = "."}
 click = "*"
 numpy = "*"
 pandas = "*"
 pillow = "*"
 pokemontcgsdk = "*"
+retrying = "*"
 requests = "*"
 scikit-image = "*"
+scikit-learn = "*"
 torch = "*"
+torchvision = "*"
 
 [dev-packages]
 jupyter = "*"
-torchvision = "*"
 
 [requires]
 python_version = "3.8"
