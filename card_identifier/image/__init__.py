@@ -1,4 +1,6 @@
+import logging
 import pathlib
+import pickle
 import random
 
 from PIL import Image
@@ -9,6 +11,17 @@ from . import transformers
 WORKING_SIZE = (500, 500)
 OUT_SIZE = (224, 224)
 OUT_EXT = "png"
+
+logger = logging.getLogger('card_identifier.pokemon')
+
+
+def gen_possibilities(image_id: str, pickle_path: pathlib.Path):
+    dataset = set()
+    for bg_color in background.range_solid_colors():
+        dataset.add({'bg_color': bg_color})
+    with open(pickle_path.joinpath(f'{image_id}.pickle'), "wb") as file:
+        logger.info('saving card info as pickle')
+        pickle.dump(dataset, file)
 
 
 def gen_dataset(image_id: str,
@@ -25,10 +38,11 @@ def gen_dataset(image_id: str,
     img = Image.open(image_path)
     for bg_color in background.range_solid_colors():
         bg_img, bg_label = background.mk_background(WORKING_SIZE, bg_color)
-        #resize_label = "resize-0"
-        #if random.random() < 0.5:
+        # resize_label = "resize-0"
+        # if random.random() < 0.5:
         resized_img, resize_label = transformers.random_resize(img)
-        for rot_img, rot_label in transformers.range_rotate(resized_img, bg_color):
+        for rot_img, rot_label in transformers.range_rotate(resized_img,
+                                                            bg_color):
             for pos, pos_label in background.range_placement(bg_img.size,
                                                              rot_img.size,
                                                              0.75):

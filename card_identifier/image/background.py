@@ -4,7 +4,28 @@ from typing import Tuple
 from PIL import Image
 
 
-def range_solid_colors() -> tuple:
+def random_solid_color() -> Tuple[int, int, int]:
+    return (random.randint(0, 255),
+            random.randint(0, 255),
+            random.randint(0, 255),)
+
+
+def random_placement(
+        bg_size: Tuple[int, int],
+        img_size: Tuple[int, int],
+        slop: float, ) -> Tuple[int, int]:
+    x_max = int(bg_size[0] - (img_size[0] * slop))
+    x_zero = 0 - int(img_size[0] * (1 - slop))
+    x = random.randint(x_zero, x_max)
+
+    y_max = int(bg_size[1] - (img_size[1] * slop))
+    y_zero = 0 - int(img_size[1] * (1 - slop))
+    y = random.randint(y_zero, y_max)
+
+    return x, y
+
+
+def range_solid_colors() -> Tuple[int, int, int]:
     for r in range(-1, 256, 16):
         if r < 0: r = 0
         for g in range(-1, 256, 16):
