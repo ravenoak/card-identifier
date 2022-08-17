@@ -7,14 +7,13 @@ import random
 import click
 
 from card_identifier.data import get_dataset_dir, get_pickle_dir
-from card_identifier.image import gen_dataset
+from card_identifier.image import gen_random_dataset
 from card_identifier import pokemon
 
 logger = logging.getLogger('card_identifier')
 
 
-def create_training_images(save_percent: float = 0.01, filter: str = None):
-    mp.set_start_method('spawn')
+def create_random_training_images(num: int, filter: str = None):
     pickle_dir = get_pickle_dir()
     dataset_dir = get_dataset_dir()
     random_state_pickle = pickle_dir.joinpath("random_state.pickle")
@@ -30,11 +29,12 @@ def create_training_images(save_percent: float = 0.01, filter: str = None):
     work = []
     for id, path in id_image_map.items():
         if filter is None or id.startswith(filter):
-            work.append((id, pathlib.Path(path), pathlib.Path(dataset_dir),
-                         save_percent))
+            work.append(
+                (id, pathlib.Path(path), pathlib.Path(dataset_dir), num)
+            )
     with mp.Pool(processes=None) as pool:
         logger.info('starting gen_dataset in pool')
-        pool.starmap(gen_dataset, work)
+        pool.starmap(gen_random_dataset, work)
 
 
 def setup_logging(debug: bool = False):
@@ -67,17 +67,18 @@ def card_data(ctx, card_type, images, force):
     logging.info('card-data')
     if card_type == 'pokemon':
         logger.info('Pokemon!')
-        data = pokemon.download_card_data()
+        data = pokemon.get_card_data()
         if images:
             pokemon.download_card_images(data, force)
 
 
 @cli.command()
 @click.option('-f', '--filter', type=str, default=None)
-@click.option('-s', '--save-percent', type=float, default=0.00001)
+@click.option('-n', '--number-of-images', type=int, default=100)
 @click.pass_context
-def create_dataset(ctx, save_percent, filter):
-    create_training_images(save_percent, filter)
+def create_dataset(ctx, number_of_images, filter):
+    mp.set_start_method('spawn')
+    create_random_training_images(number_of_images, filter)
 
 
 @cli.command()
@@ -94,5 +95,9 @@ def save_random_state(ctx, seed):
         pickle.dump(random.getstate(), file)
 
 
-if __name__ == '__main__':
+def run():
     cli(obj={})
+
+
+if __name__ == '__main__':
+    run()
