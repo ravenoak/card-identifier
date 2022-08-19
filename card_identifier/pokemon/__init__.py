@@ -2,105 +2,95 @@ import logging
 import pathlib
 import pickle
 from typing import Dict, List, Union
-from urllib.error import HTTPError
 
-from retrying import retry
-import requests
 from pokemontcgsdk import Card, Set
 
 from card_identifier.data import get_image_dir, get_pickle_dir
+from card_identifier.util import download_save_image
 
 logger = logging.getLogger('card_identifier.pokemon')
 
 
-def refresh_card_data():
-    card_path = get_pickle_dir().joinpath("card-all.pickle")
-    set_card_path = get_pickle_dir().joinpath("cards_by_set.pickle")
+class ImageManager:
+    def __init__(self):
+        self.pickle_dir = get_pickle_dir('pokemon')
+        self.image_dir = get_image_dir('pokemon')
+        self.card_image_file = self.pickle_dir.joinpath(
+            "card_image_map.pickle")
+        self.card_image_map = self.load_card_image_map()
 
-    set_card_map = dict()
-    logger.info('downloading cards')
-    all_cards = Card.all()
-    for card in all_cards:
-        if card.set_code not in set_card_map:
-            set_card_map[card.set_code] = list()
-        set_card_map[card.set_code].append(card)
+    def load_card_image_map(self) -> Dict[str, pathlib.Path]:
+        if self.card_image_file.exists():
+            with open(self.card_image_file, "rb") as file:
+                logger.info('opening card_image_map pickle')
+                return pickle.load(file)
+        else:
+            logger.info('not loading card_image_map: missing')
+            return {}
 
-    with open(card_path, "wb") as file:
-        logger.info('saving card info as pickle')
-        pickle.dump(all_cards, file)
-    with open(set_card_path, "wb") as file:
-        logger.info('saving set-card map as pickle')
-        pickle.dump(set_card_map, file)
+    def save_card_image_map(self):
+        with open(self.card_image_file, "wb") as file:
+            logger.info('saving card_image_map pickle')
+            pickle.dump(self.card_image_map, file)
 
+    def get_image_path(self, card_id: str) -> pathlib.Path:
+        return self.card_image_map[card_id]
 
-def refresh_set_data():
-    path = get_pickle_dir().joinpath("set-all.pickle")
-
-    logger.info('downloading sets')
-    all_sets = Set.all()
-
-    with open(path, "wb") as file:
-        logger.info('saving set info as pickle')
-        pickle.dump(all_sets, file)
-
-
-def get_card_data(flat=False) -> Union[Dict, List[Card]]:
-    card_path = get_pickle_dir().joinpath("card-all.pickle")
-    set_card_path = get_pickle_dir().joinpath("cards_by_set.pickle")
-
-    if flat:
-        with open(card_path, "rb") as file:
-            all_cards = pickle.load(file)
-        return all_cards
-    else:
-        with open(set_card_path, "rb") as file:
-            cards_by_set = pickle.load(file)
-        return cards_by_set
+    def download_card_images(self, cards: List[Card], force: bool = False):
+        for card in cards:
+            img_name = pathlib.Path(card.id + '.png')
+            image_path = self.image_dir.joinpath(img_name)
+            if not image_path.exists() or force:
+                logger.info(f'downloading {card.id}')
+                if download_save_image(card.images.large, image_path):
+                    self.card_image_map[card.id] = img_name
 
 
-def get_set_data() -> List[Set]:
-    path = get_pickle_dir().joinpath("set-all.pickle")
+class CardManager:
+    def __init__(self):
+        self.card_path = get_pickle_dir('pokemon').joinpath("cards.pickle")
+        self.set_path = get_pickle_dir('pokemon').joinpath("sets.pickle")
+        self.set_card_path = get_pickle_dir('pokemon').joinpath(
+            "cards_by_set.pickle")
+        self.card_data = self.get_data('cards')
+        self.set_data = self.get_data('sets')
+        self.set_card_map = self.get_set_card_map()
 
-    with open(path, "rb") as file:
-        all_sets = pickle.load(file)
+    def get_data(self, item: str, overwrite=False) -> Dict:
+        if item == 'cards':
+            path = self.card_path
+            items = Card.all
+        elif item == 'sets':
+            path = self.set_path
+            items = Set.all
+        else:
+            raise ValueError(f'invalid item: {item}')
+        if path.exists() and not overwrite:
+            with open(path, "rb") as file:
+                return pickle.load(file)
+        else:
+            data = dict()
+            for item in items():
+                data[item.id] = item
+            with open(path, "wb") as file:
+                pickle.dump(data, file)
+            return data
 
-    return all_sets
+    def get_set_card_map(self, overwrite=False):
+        if self.set_card_path.exists() and not overwrite:
+            with open(self.set_card_path, "rb") as file:
+                return pickle.load(file)
+        else:
+            set_card_map = dict()
+            for card_id, card in self.card_data.items():
+                if card.set.id not in set_card_map:
+                    set_card_map[card.set.id] = list()
+                set_card_map[card.set.id].append(card.id)
+            with open(self.set_card_path, "wb") as file:
+                pickle.dump(set_card_map, file)
+            return set_card_map
 
-
-def retry_if_http_error(e: Exception):
-    if isinstance(e, HTTPError):
-        logger.error(f'HTTP error: {e.code} {e.url}')
-        return HTTPError.code == 429
-
-
-@retry(retry_on_exception=retry_if_http_error,
-       wait_exponential_multiplier=100,
-       wait_exponential_max=10000)
-def download_save_image(url: str, path: pathlib.Path) -> bool:
-    image = requests.get(url, allow_redirects=True)
-    logger.debug(f"downloaded image: {url}")
-    if image.ok:
-        with open(path, "wb") as file:
-            file.write(image.content)
-        logger.info(f"file written: {path}")
-        return True
-    else:
-        logger.error(f"error retrieving image: {url}")
-        return False
-
-
-def download_card_images(cards: List[Card], overwrite=False):
-    image_dir = get_image_dir()
-    id_image_map = {}
-    logger.info('downloading card images')
-    for card in cards:
-        path = image_dir.joinpath(
-            ".".join([card.id, card.image_url.split(".")[-1]]))
-        if not path.exists() or overwrite:
-            if download_save_image(card.image_url, path):
-                id_image_map[card.id] = path
-
-    pickle_dir = get_pickle_dir()
-    with open(pickle_dir.joinpath("id_image_map.pickle"), "wb") as file:
-        logger.info('writing id_image_map as pickle')
-        pickle.dump(id_image_map, file)
+    def refresh_data(self):
+        self.card_data = self.get_data('cards', True)
+        self.set_data = self.get_data('sets', True)
+        self.set_card_map = self.get_set_card_map(True)
