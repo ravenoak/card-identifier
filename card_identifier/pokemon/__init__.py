@@ -1,7 +1,7 @@
 import logging
 import pathlib
 import pickle
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from pokemontcgsdk import Card, Set
 
@@ -18,6 +18,12 @@ class ImageManager:
         self.card_image_file = self.pickle_dir.joinpath(
             "card_image_map.pickle")
         self.card_image_map = self.load_card_image_map()
+
+    def scan_img_dir(self) -> Dict[str, pathlib.Path]:
+        card_image_map = {}
+        for img in self.image_dir.glob('**/*.png'):
+            card_image_map[img.stem] = img.name
+        return card_image_map
 
     def load_card_image_map(self) -> Dict[str, pathlib.Path]:
         if self.card_image_file.exists():
@@ -56,7 +62,7 @@ class CardManager:
         self.set_data = self.get_data('sets')
         self.set_card_map = self.get_set_card_map()
 
-    def get_data(self, item: str, overwrite=False) -> Dict:
+    def get_data(self, item: str, overwrite: bool = False) -> Dict:
         if item == 'cards':
             path = self.card_path
             items = Card.all

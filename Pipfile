@@ -4,9 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-card-identifier = {editable = true, path = "."}
 click = "*"
 numpy = "*"
+opencv-contrib-python = "*"
 pandas = "*"
 pillow = "*"
 pokemontcgsdk = "*"
@@ -14,11 +14,21 @@ retrying = "*"
 requests = "*"
 scikit-image = "*"
 scikit-learn = "*"
+streamlit = "*"
 torch = "*"
 torchvision = "*"
+tensorflow = "*"
+scikit-build = "*"
+pythran = "*"
+scipy = "*"
+cython = "*"
 
 [dev-packages]
 jupyter = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.9"
+
+[packages.collectable-card-identifier]
+editable = true
+path = "."

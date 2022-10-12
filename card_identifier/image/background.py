@@ -1,13 +1,30 @@
+import pathlib
 import random
 from typing import Tuple
 
 from PIL import Image
 
+BACKGROUND_TYPES = [
+    "random_solid_color",
+    "random_bg_image",
+]
 
-def random_solid_color() -> Tuple[int, int, int]:
-    return (random.randint(0, 255),
-            random.randint(0, 255),
-            random.randint(0, 255))
+
+def random_solid_color(size: tuple[int, int], meta) -> Image.Image:
+    bg_color = (random.randint(0, 255),
+                random.randint(0, 255),
+                random.randint(0, 255))
+    meta['bg_color'] = bg_color
+    return Image.new("RGBA", size, bg_color)
+
+
+def random_bg_image(size: tuple[int, int], meta) -> Image.Image:
+    bg_image = Image.open(
+        random.choice([i for i in pathlib.Path().glob("data/backgrounds/*")]))
+    meta['bg_image'] = bg_image.filename
+    img = Image.new("RGBA", size)
+    img.paste(bg_image.resize(size), (0, 0))
+    return img
 
 
 def random_placement(bg_size: Tuple[int, int],

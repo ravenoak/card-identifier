@@ -16,7 +16,7 @@ logger = logging.getLogger('card_identifier')
 
 def create_random_training_images(num: int, id_filter: str = None):
     pickle_dir = get_pickle_dir('pokemon')
-    dataset_dir = get_dataset_dir()
+    dataset_dir = get_dataset_dir('pokemon')
     random_state_pickle = pickle_dir.joinpath("random_state.pickle")
     if random_state_pickle.exists():
         with open(random_state_pickle, "rb") as file:
@@ -28,10 +28,18 @@ def create_random_training_images(num: int, id_filter: str = None):
         logger.info('opening card_image_map pickle')
         id_image_map = pickle.load(file)
     work = []
-    for img_id, path in id_image_map.items():
-        if id_filter is None or img_id.startswith(id_filter):
+    for card_id, path in id_image_map.items():
+        set_id = card_id.split('-')[0]
+        if id_filter is None or card_id.startswith(id_filter):
+            data_path = f'data/images/originals/pokemon/'
+            save_path = pathlib.Path(dataset_dir).joinpath(
+                f'{set_id}/{card_id}')
+            if not save_path.exists():
+                save_path.mkdir(parents=True)
             work.append(
-                (img_id, pathlib.Path(path), pathlib.Path(dataset_dir), num)
+                (pathlib.Path(data_path).joinpath(path),
+                 save_path,
+                 num)
             )
     with mp.Pool(processes=None) as pool:
         logger.info('starting gen_dataset in pool')
