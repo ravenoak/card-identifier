@@ -76,7 +76,9 @@ def gen_random_dataset(image_path: pathlib.Path,
         # print(bg_type, base_image, meta)
         resized_img, resize_meta = transformers.random_resize(src_image)
         meta.update(resize_meta)
-        rot_image, rot_meta = transformers.random_rotate(resized_img)
+        perspective_img, perspective_meta = transformers.random_perspective_transform(resized_img)
+        meta.update(perspective_meta)
+        rot_image, rot_meta = transformers.random_rotate(perspective_img)
         meta.update(rot_meta)
         pos, pos_meta = background.random_placement(base_image.size,
                                                     rot_image.size,

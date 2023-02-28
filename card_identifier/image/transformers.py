@@ -1,10 +1,23 @@
 import random
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
 from PIL import Image
 from PIL import ImageOps
 from skimage.util import random_noise
+
+
+def _find_coeffs(pa, pb):
+    matrix = []
+    for p1, p2 in zip(pa, pb):
+        matrix.append([p1[0], p1[1], 1, 0, 0, 0, -p2[0] * p1[0], -p2[0] * p1[1]])
+        matrix.append([0, 0, 0, p1[0], p1[1], 1, -p2[1] * p1[0], -p2[1] * p1[1]])
+
+    A = np.matrix(matrix, dtype=float)
+    B = np.array(pb).reshape(8)
+
+    res = np.dot(np.linalg.inv(A.T * A) * A.T, B)
+    return np.array(res).reshape(8)
 
 
 def _add_noise(image: Image.Image, **kwargs) -> Tuple[
@@ -39,6 +52,47 @@ def random_resize(image: Image.Image, resize_percent: float = 0.3) -> Tuple[
             "transformer": "fuzzy_resize",
             "resize": resize,
             "method": "PIL.Image.Image.resize",
+        }
+    )
+
+
+def random_perspective_transform(img: Image.Image, wobble_percent: float = 0.2) -> Tuple[Image.Image, dict]:
+    def wobble(xy, size):
+        return xy + int((random.randint(int(0 - (wobble_percent * 100)), int(0 + (wobble_percent * 100))) / 100) * size)
+
+    w, h = img.size
+    x0: int = wobble(0, w)
+    y0: int = wobble(0, h)
+
+    x1: int = wobble(w, w)
+    y1: int = wobble(0, h)
+
+    x2: int = wobble(w, w)
+    y2: int = wobble(h, h)
+
+    x3: int = wobble(0, w)
+    y3: int = wobble(h, h)
+
+    # put image fully in frame
+    adj_x = abs(min(x0, x1, x2, x3))
+    adj_y = abs(min(y0, y1, y2, y3))
+    pa: list[tuple[int, int]] = [(x0 + adj_x, y0 + adj_y), (x1 + adj_x, y1 + adj_y), (x2 + adj_x, y2 + adj_y),
+                                 (x3 + adj_x, y3 + adj_y)]
+    pb: list[tuple[int, int]] = [(0, 0), (w, 0), (w, h), (0, h)]
+    coeffs = _find_coeffs(pa, pb)
+    return (
+        img.transform(
+            (int(img.size[0] * (1 + wobble_percent)), int(img.size[1] * (1 + wobble_percent))),
+            Image.PERSPECTIVE,
+            data=coeffs,
+            resample=Image.BICUBIC,
+            fill=0
+        ).resize((w, h)),
+        {
+            "transformer": "perspective",
+            "pa": pa,
+            "coeffs": coeffs,
+            "method": "PIL.Image.Image.transform"
         }
     )
 
