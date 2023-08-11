@@ -6,17 +6,17 @@ import random
 
 import click
 
-from card_identifier.data import get_dataset_dir, get_pickle_dir
-from card_identifier.image import gen_random_dataset
+from card_identifier.data import get_dataset_dir, get_pickle_dir, NAMESPACES
+from card_identifier.image import gen_random_dataset, DEFAULT_OUT_EXT
 from card_identifier import pokemon
 from card_identifier.util import setup_logging
 
 logger = logging.getLogger('card_identifier')
 
 
-def create_random_training_images(num: int, id_filter: str = None):
-    pickle_dir = get_pickle_dir('pokemon')
-    dataset_dir = get_dataset_dir('pokemon')
+def create_random_training_images(num: int, card_type: str, id_filter: str = None):
+    pickle_dir = get_pickle_dir(card_type)
+    dataset_dir = get_dataset_dir(card_type)
     random_state_pickle = pickle_dir.joinpath("random_state.pickle")
     if random_state_pickle.exists():
         with open(random_state_pickle, "rb") as file:
@@ -29,17 +29,20 @@ def create_random_training_images(num: int, id_filter: str = None):
         id_image_map = pickle.load(file)
     work = []
     for card_id, path in id_image_map.items():
-        set_id = card_id.split('-')[0]
         if id_filter is None or card_id.startswith(id_filter):
-            data_path = f'data/images/originals/pokemon/'
+            data_path = f'data/images/originals/{card_type}/'
+            set_id = card_id.split('-')[0]
             save_path = pathlib.Path(dataset_dir).joinpath(
                 f'{set_id}/{card_id}')
             if not save_path.exists():
                 save_path.mkdir(parents=True)
+                save_num = num
+            else:
+                save_num = num - len(list(save_path.glob(f'*.{DEFAULT_OUT_EXT}')))
             work.append(
                 (pathlib.Path(data_path).joinpath(path),
                  save_path,
-                 num)
+                 save_num)
             )
     with mp.Pool(processes=None) as pool:
         logger.info('starting gen_dataset in pool')
@@ -60,7 +63,7 @@ def cli(ctx, debug):
 @click.option('-f / ', '--force/--no-force', default=False)
 @click.option('-i / ', '--images/--no-images', default=False)
 @click.option('-t', '--card-type',
-              type=click.Choice(['pokemon', ], case_sensitive=False),
+              type=click.Choice(NAMESPACES, case_sensitive=False),
               default='pokemon')
 @click.pass_context
 def card_data(ctx, card_type, images, force, refresh):
@@ -78,16 +81,47 @@ def card_data(ctx, card_type, images, force, refresh):
 @cli.command()
 @click.option('-f', '--str-filter', type=str, default=None)
 @click.option('-n', '--number-of-images', type=int, default=100)
+@click.option('-t', '--card-type',
+              type=click.Choice(NAMESPACES, case_sensitive=False),
+              default='pokemon')
 @click.pass_context
-def create_dataset(ctx, number_of_images, str_filter):
+def create_dataset(ctx, card_type, number_of_images, str_filter):
     mp.set_start_method('spawn')
-    create_random_training_images(number_of_images, str_filter)
+    create_random_training_images(number_of_images, card_type, str_filter)
+
+
+@cli.command()
+@click.option('-n', '--number-of-images', type=int, default=100)
+@click.option('-t', '--card-type',
+              type=click.Choice(NAMESPACES, case_sensitive=False),
+              default='pokemon')
+@click.pass_context
+def trim_dataset(ctx, card_type, number_of_images):
+    pickle_dir = get_pickle_dir(card_type)
+    dataset_dir = get_dataset_dir(card_type)
+    random_state_pickle = pickle_dir.joinpath("random_state.pickle")
+    if random_state_pickle.exists():
+        with open(random_state_pickle, "rb") as file:
+            logger.info('opening random_state pickle')
+            random.setstate(pickle.load(file))
+    else:
+        logger.info('not loading random_state: missing')
+
+    for set_dir in dataset_dir.glob('*'):
+        if set_dir.is_dir():
+            for image_dir in set_dir.glob('*'):
+                if image_dir.is_dir():
+                    images = list(image_dir.glob(f'*.{DEFAULT_OUT_EXT}'))
+                    if len(images) > number_of_images:
+                        random.shuffle(images)
+                        for image in images[number_of_images:]:
+                            image.unlink()
 
 
 @cli.command()
 @click.option('-s', '--seed', type=int, default=None)
 @click.option('-t', '--card-type',
-              type=click.Choice(['pokemon', ], case_sensitive=False),
+              type=click.Choice(NAMESPACES, case_sensitive=False),
               default='pokemon')
 @click.pass_context
 def save_random_state(ctx, card_type, seed):

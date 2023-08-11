@@ -21,6 +21,8 @@ func_map = {
 
 
 class ImageDatasetManager:
+    CARD_IMAGE_MAP = "card_image_map.pickle"
+
     def __init__(self, namespace: str):
         self.working_size = DEFAULT_WORKING_SIZE
         self.out_size = DEFAULT_OUT_SIZE
@@ -32,16 +34,14 @@ class ImageDatasetManager:
         self.num_img_desired = 100
 
     def load_card_dataset_map(self) -> Dict[str, pathlib.Path]:
-        if self.dataset_dir.joinpath("card_dataset_map.pickle").exists():
-            with open(self.dataset_dir.joinpath(
-                    "card_dataset_map.pickle"), "rb") as file:
+        if self.dataset_dir.joinpath(self.CARD_IMAGE_MAP).exists():
+            with open(self.dataset_dir.joinpath(self.CARD_IMAGE_MAP), "rb") as file:
                 return pickle.load(file)
         else:
             return {}
 
     def save_card_dataset_map(self):
-        with open(self.dataset_dir.joinpath(
-                "card_dataset_map.pickle"), "wb") as file:
+        with open(self.dataset_dir.joinpath(self.CARD_IMAGE_MAP), "wb") as file:
             pickle.dump(self.card_dataset_map, file)
 
     def scan_dataset_dir(self) -> dict[str, dict[str, Union[int, list]]]:
@@ -55,9 +55,7 @@ class ImageDatasetManager:
         return card_dataset_map
 
 
-def gen_random_dataset(image_path: pathlib.Path,
-                       save_path: pathlib.Path,
-                       dataset_size: int):
+def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, dataset_size: int, xform=False):
     if not image_path.exists() and image_path.is_file():
         # TODO: Actually might be an error...
         return
@@ -73,32 +71,24 @@ def gen_random_dataset(image_path: pathlib.Path,
         meta['bg_type'] = bg_type
         base_image = func_map[bg_type](DEFAULT_WORKING_SIZE, meta)
         # TODO: Add logging.
-        # print(bg_type, base_image, meta)
         resized_img, resize_meta = transformers.random_resize(src_image)
         meta.update(resize_meta)
         perspective_img, perspective_meta = transformers.random_perspective_transform(resized_img)
         meta.update(perspective_meta)
         rot_image, rot_meta = transformers.random_rotate(perspective_img)
         meta.update(rot_meta)
-        pos, pos_meta = background.random_placement(base_image.size,
-                                                    rot_image.size,
-                                                    0.75)
+        pos, pos_meta = background.random_placement(base_image.size, rot_image.size, 0.75)
         meta.update(pos_meta)
         base_image.paste(rot_image, pos, rot_image)
         base_image = base_image.convert(mode="RGB")
-        # xform = random.choice([True, False])
-        xform = False
         if xform:
             meta['transform'] = True
-            xform_image, xform_meta = transformers.random_random_transformer(
-                base_image)
+            xform_image, xform_meta = transformers.random_random_transformer(base_image)
             meta.update(xform_meta)
             image_hash = hashlib.sha256(xform_image.tobytes()).hexdigest()
             filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
-            xform_image.resize(DEFAULT_OUT_SIZE).save(
-                open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
+            xform_image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
         else:
             image_hash = hashlib.sha256(base_image.tobytes()).hexdigest()
             filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
-            base_image.resize(DEFAULT_OUT_SIZE).save(
-                open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
+            base_image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)

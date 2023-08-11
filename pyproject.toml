@@ -16,6 +16,9 @@ scikit-image = "^0.19.3"
 retrying = "^1.3.3"
 requests = "^2.28.1"
 
+[tool.poetry.group.dev.dependencies]
+streamlit = "*"
+
 [tool.poetry.scripts]
 mkdataset = "card_identifier.cli.main:run"
 

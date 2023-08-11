@@ -1,7 +1,7 @@
 ARG USER_ID=1000
 ARG USER_NAME="card-identifier"
 
-FROM tensorflow/tensorflow:2.11.0-gpu-jupyter
+FROM tensorflow/tensorflow:2.13.0-gpu-jupyter
 ARG USER_ID
 ARG USER_NAME
 
