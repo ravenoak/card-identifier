@@ -39,6 +39,10 @@ class ImageManager:
             logger.info('saving card_image_map pickle')
             pickle.dump(self.card_image_map, file)
 
+    def refresh_card_image_map(self):
+        self.card_image_map = self.scan_img_dir()
+        self.save_card_image_map()
+
     def get_image_path(self, card_id: str) -> pathlib.Path:
         return self.card_image_map[card_id]
 
@@ -62,36 +66,43 @@ class CardManager:
         self.set_data = self.get_data('sets')
         self.set_card_map = self.get_set_card_map()
 
-    def get_data(self, item: str, overwrite: bool = False) -> Dict:
-        if item == 'cards':
+    def get_data(self, data_item: str, overwrite: bool = False) -> Dict:
+        if data_item == 'cards':
             path = self.card_path
+            logger.info('getting cards')
             items = Card.all
-        elif item == 'sets':
+        elif data_item == 'sets':
             path = self.set_path
+            logger.info('getting sets')
             items = Set.all
         else:
-            raise ValueError(f'invalid item: {item}')
+            raise ValueError(f'invalid item: {data_item}')
         if path.exists() and not overwrite:
+            logger.info(f'loading {data_item}')
             with open(path, "rb") as file:
                 return pickle.load(file)
         else:
             data = dict()
             for item in items():
                 data[item.id] = item
+            logger.info(f'saving {data_item} to {path}')
             with open(path, "wb") as file:
                 pickle.dump(data, file)
             return data
 
     def get_set_card_map(self, overwrite=False):
         if self.set_card_path.exists() and not overwrite:
+            logger.info('loading cards_by_set')
             with open(self.set_card_path, "rb") as file:
                 return pickle.load(file)
         else:
             set_card_map = dict()
+            logger.info('computing cards_by_set')
             for card_id, card in self.card_data.items():
                 if card.set.id not in set_card_map:
                     set_card_map[card.set.id] = list()
                 set_card_map[card.set.id].append(card.id)
+            logger.info(f'saving cards_by_set to {self.set_card_path}')
             with open(self.set_card_path, "wb") as file:
                 pickle.dump(set_card_map, file)
             return set_card_map

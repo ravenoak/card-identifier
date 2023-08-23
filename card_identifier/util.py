@@ -1,5 +1,7 @@
 import logging
 import pathlib
+import pickle
+import random
 from urllib.error import HTTPError
 
 import requests
@@ -38,3 +40,18 @@ def download_save_image(url: str, path: pathlib.Path) -> bool:
     else:
         logger.error(f"error retrieving image: {url}")
         return False
+
+
+def save_random_state(pickle_dir: pathlib.Path):
+    with open(pickle_dir.joinpath("random_state.pickle"), "wb") as file:
+        pickle.dump(random.getstate(), file)
+
+
+def load_random_state(pickle_dir: pathlib.Path):
+    random_state_pickle = pickle_dir.joinpath("random_state.pickle")
+    if random_state_pickle.exists():
+        with open(random_state_pickle, "rb") as file:
+            logger.info('opening random_state pickle')
+            random.setstate(pickle.load(file))
+    else:
+        logger.info('not loading random_state: missing')

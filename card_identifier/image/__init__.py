@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import pathlib
 import pickle
 import random
@@ -18,6 +19,8 @@ func_map = {
     "random_solid_color": background.random_solid_color,
     "random_bg_image": background.random_bg_image,
 }
+
+logger = logging.getLogger('card_identifier.pokemon')
 
 
 class ImageDatasetManager:
@@ -61,9 +64,8 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
         return
     if not save_path.exists():
         raise ValueError(f"Save path does not exist: {save_path}")
-
+    logger.debug(f"Generating {dataset_size} images from {image_path}")
     src_image = Image.open(image_path)
-    src_image.putalpha(255)
     for _ in range(0, dataset_size):
         meta = {}
         bg_type = random.choice(background.BACKGROUND_TYPES)
@@ -81,6 +83,7 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
         meta.update(pos_meta)
         base_image.paste(rot_image, pos, rot_image)
         base_image = base_image.convert(mode="RGB")
+        logger.debug(f"Generated image with meta: {meta}")
         if xform:
             meta['transform'] = True
             xform_image, xform_meta = transformers.random_random_transformer(base_image)
