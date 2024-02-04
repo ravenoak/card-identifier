@@ -14,14 +14,14 @@ def random_solid_color(size: tuple[int, int], meta) -> Image.Image:
     bg_color = (random.randint(0, 255),
                 random.randint(0, 255),
                 random.randint(0, 255))
-    meta['bg_color'] = bg_color
+    meta["bg_color"] = bg_color
     return Image.new("RGBA", size, bg_color)
 
 
 def random_bg_image(size: tuple[int, int], meta) -> Image.Image:
     bg_image = Image.open(
         random.choice([i for i in pathlib.Path().glob("data/backgrounds/*")]))
-    meta['bg_image'] = bg_image.filename
+    meta["bg_image"] = bg_image.filename
     img = Image.new("RGBA", size)
     img.paste(bg_image.resize(size), (0, 0))
     return img

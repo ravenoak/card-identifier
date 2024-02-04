@@ -15,14 +15,14 @@ def setup_logging(debug: bool = False):
     if debug:
         level = logging.DEBUG
     logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         level=level,
     )
 
 
 def retry_if_http_error(e: Exception):
     if isinstance(e, HTTPError):
-        logger.error(f'HTTP error: {e.code} {e.url}')
+        logger.error(f"HTTP error: {e.code} {e.url}")
         return HTTPError.code == 429
 
 
@@ -51,7 +51,7 @@ def load_random_state(pickle_dir: pathlib.Path):
     random_state_pickle = pickle_dir.joinpath("random_state.pickle")
     if random_state_pickle.exists():
         with open(random_state_pickle, "rb") as file:
-            logger.info('opening random_state pickle')
+            logger.info("opening random_state pickle")
             random.setstate(pickle.load(file))
     else:
-        logger.info('not loading random_state: missing')
+        logger.info("not loading random_state: missing")
