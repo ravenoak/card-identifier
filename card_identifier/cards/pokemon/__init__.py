@@ -7,6 +7,7 @@ from pokemontcgsdk import Card, Set
 
 from card_identifier.data import get_image_dir, get_pickle_dir
 from card_identifier.util import download_save_image
+from card_identifier.cards import ICardImageManager
 
 logger = logging.getLogger("card_identifier.pokemon")
 
@@ -17,7 +18,7 @@ def get_legal_sets():
         set((s.id for s in Set.where(q="legalities.expanded:legal"))))
 
 
-class ImageManager:
+class ImageManager(ICardImageManager):
     """Manages the original images for the Pokémon TCG"""
     def __init__(self):
         self.pickle_dir = get_pickle_dir("pokemon")
