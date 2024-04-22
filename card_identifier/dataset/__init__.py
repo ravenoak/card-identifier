@@ -69,10 +69,10 @@ class DatasetManager:
             raise ValueError(f"invalid training_type: {training_type}")
 
 
-def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, dataset_size: int, xform=False):
+def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, dataset_size: int, subject_noise=False):
     """Generates a random dataset of the given size from the given image."""
     # TODO: Need to handle logging better in multiprocessing.
-    setup_logging(False)
+    setup_logging(debug=False)
     if not image_path.exists() and image_path.is_file():
         logger.error(f"Image path does not exist or is not a file: {image_path}")
         return
@@ -83,14 +83,14 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
     src_image = src_image.convert(mode="RGBA")
     for iteration in range(0, dataset_size):
         logger.debug(f"Generating image {image_path} {iteration} of {dataset_size}")
-        meta = {"transform": xform}
-        if xform and random.random() < 0.5:
-            xform_image, xform_meta = transformers.random_random_transformer(src_image)
+        meta = {"subject_noise": subject_noise}
+        if subject_noise and random.random() < 0.5:
+            noise_image, xform_meta = transformers.add_randomized_noise(src_image)
             meta.update(xform_meta)
         else:
-            xform_image = src_image
+            noise_image = src_image
 
-        resized_img, resize_meta = transformers.random_resize(xform_image)
+        resized_img, resize_meta = transformers.random_resize(noise_image)
         meta.update(resize_meta)
         perspective_img, perspective_meta = transformers.random_perspective_transform(resized_img)
         meta.update(perspective_meta)
