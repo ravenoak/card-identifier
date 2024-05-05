@@ -10,6 +10,7 @@ from PIL import Image
 from card_identifier.cards.pokemon import get_legal_sets
 from card_identifier.data import get_image_dir, get_dataset_dir
 from card_identifier.image import transformers, Pipeline
+from card_identifier.dataset.metadata import metadata_writer
 from card_identifier.util import setup_logging
 
 DEFAULT_WORKING_SIZE = (1024, 1024)
@@ -104,5 +105,5 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
         meta["image_hash"] = image_hash
         filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
         image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
-        # TODO: Figure out what to to with the meta data.
+        metadata_writer.write({"filename": filename, **meta})
         logger.debug(f"Generated image with meta: {meta}")
