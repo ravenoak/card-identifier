@@ -9,7 +9,7 @@ from PIL import Image
 
 from card_identifier.cards.pokemon import get_legal_sets
 from card_identifier.data import get_image_dir, get_dataset_dir
-from card_identifier.image import transformers, background, func_map, Pipeline
+from card_identifier.image import transformers, Pipeline
 from card_identifier.util import setup_logging
 
 DEFAULT_WORKING_SIZE = (1024, 1024)
@@ -84,23 +84,25 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
     for iteration in range(0, dataset_size):
         logger.debug(f"Generating image {image_path} {iteration} of {dataset_size}")
         pipeline = Pipeline()
-        meta = {"subject_noise": subject_noise}
         if subject_noise and random.random() < 0.5:
-            noise_image, xform_meta = transformers.add_randomized_noise(src_image)
-            meta.update(xform_meta)
+            pipeline.add_transformation(transformers.RandomChoiceTransformation([
+                transformers.RandomSolarizeTransformation(),
+                transformers.RandomPosterizeTransformation(),
+                transformers.RandomAutocontrastTransformation(),
+            ]))
         pipeline.add_transformation(transformers.RandomPercentResizeTransformation(0.3, 1.6))
         pipeline.add_transformation(transformers.WobblePerspectiveTransformation(src_image.size, 0.3))
         pipeline.add_transformation(transformers.RandomRotateTransformation())
-        src_image, meta = pipeline.execute(src_image)
-        bg_type = random.choice(background.BACKGROUND_TYPES)
-        meta["bg_type"] = bg_type
-        base_image = func_map[bg_type](DEFAULT_WORKING_SIZE, meta)
-        pos, pos_meta = background.random_placement(base_image.percent, src_image.size, 0.75)
-        meta.update(pos_meta)
-        base_image.paste(src_image, pos, src_image.split()[3])
-        base_image = base_image.convert(mode="RGB")
-        image_hash = hashlib.sha256(base_image.tobytes()).hexdigest()
+        pipeline.add_transformation(transformers.RandomChoiceTransformation([
+            transformers.LegacyRandomSolidColorBackgroundPasteTransformation(DEFAULT_WORKING_SIZE),
+            transformers.LegacyRandomImageBackgroundPasteTransformation(DEFAULT_WORKING_SIZE),
+        ]))
+        image, meta = pipeline.execute(src_image)
+        meta["subject_noise"] = subject_noise
+        image = image.convert(mode="RGB")
+        image_hash = hashlib.sha256(src_image.tobytes()).hexdigest()
+        meta["image_hash"] = image_hash
         filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
-        base_image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
+        image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
         # TODO: Figure out what to to with the meta data.
         logger.debug(f"Generated image with meta: {meta}")

@@ -1,6 +1,7 @@
 import abc
 import random
 from typing import Tuple
+import pathlib
 
 import numpy as np
 from PIL import Image
@@ -187,18 +188,6 @@ class RandomRotateTransformation(RotateTransformation):
         super().__init__(random.randint(0, 359))
 
 
-def random_autocontrast(img: Image.Image) -> Tuple[Image.Image, dict]:
-    cutoff = random.randint(0, 40)
-    return (
-        ImageOps.autocontrast(img, cutoff),
-        {
-            "transformer": "autocontrast",
-            "cutoff": cutoff,
-            "method": "PIL.ImageOps.autocontrast"
-        }
-    )
-
-
 class AutocontrastTransformation(ImageTransformationInterface):
     def __init__(self, cutoff: int):
         self.cutoff = cutoff
@@ -218,18 +207,6 @@ class AutocontrastTransformation(ImageTransformationInterface):
 class RandomAutocontrastTransformation(AutocontrastTransformation):
     def __init__(self):
         super().__init__(random.randint(0, 40))
-
-
-def random_posterize(img: Image.Image) -> Tuple[Image.Image, dict]:
-    bits = random.randint(1, 8)
-    return (
-        ImageOps.posterize(img, bits),
-        {
-            "transformer": "posterize",
-            "bits": bits,
-            "method": "PIL.ImageOps.posterize"
-        }
-    )
 
 
 class PosterizeTransformation(ImageTransformationInterface):
@@ -253,18 +230,6 @@ class RandomPosterizeTransformation(PosterizeTransformation):
         super().__init__(random.randint(1, 8))
 
 
-def random_solarize(img: Image.Image) -> Tuple[Image.Image, dict]:
-    threshold = random.randint(1, 128)
-    return (
-        ImageOps.solarize(img, threshold),
-        {
-            "transformer": "solarize",
-            "threshold": threshold,
-            "method": "PIL.ImageOps.solarize"
-        }
-    )
-
-
 class SolarizeTransformation(ImageTransformationInterface):
     def __init__(self, threshold: int):
         self.threshold = threshold
@@ -286,11 +251,104 @@ class RandomSolarizeTransformation(SolarizeTransformation):
         super().__init__(random.randint(1, 128))
 
 
-def add_randomized_noise(img: Image.Image) -> Tuple[Image.Image, dict]:
-    xformers = [
-        random_autocontrast,
-        random_posterize,
-        random_solarize,
-    ]
-    xformer = random.choice(xformers)
-    return xformer(img)
+class RandomChoiceTransformation(ImageTransformationInterface):
+    def __init__(self, transformations: list[ImageTransformationInterface]):
+        self.transformations = transformations
+        self._chosen = None
+
+    def apply_transformation(self, image: Image.Image) -> Image.Image:
+        self._chosen = random.choice(self.transformations)
+        return self._chosen.apply_transformation(image)
+
+    def update_metadata(self, metadata: list[dict]) -> list[dict]:
+        if self._chosen:
+            return self._chosen.update_metadata(metadata)
+        else:
+            raise ValueError("No transformation chosen")
+
+
+class SolidColorBackgroundPasteTransformation(ImageTransformationInterface):
+    def __init__(self, color: Tuple[int, int, int], position: Tuple[int, int], size: Tuple[int, int],
+                 mask: Image.Image = None):
+        self.color = color
+        self.position = position
+        self.size = size
+        self.mask = mask
+
+    def apply_transformation(self, image: Image.Image) -> Image.Image:
+        bg = Image.new("RGBA", self.size, self.color)
+        mask = self.mask if self.mask else image
+        bg.paste(image, self.position, mask)
+        return bg
+
+    def update_metadata(self, metadata: list[dict]) -> list[dict]:
+        metadata.append(
+            {"class": self.__class__,
+             "type": "paste",
+             "method": "PIL.Image.Image.paste",
+             "parameters": {"color": self.color, "position": self.position, "size": self.size, "mask": self.mask}})
+        return metadata
+
+
+class RandomSolidColorBackgroundPasteTransformation(SolidColorBackgroundPasteTransformation):
+    def __init__(self, position: Tuple[int, int], size: Tuple[int, int], mask: Image.Image = None):
+        super().__init__(
+            (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
+            position,
+            size,
+            mask
+        )
+
+def _random_position(bg_size: Tuple[int, int],
+                     img_size: Tuple[int, int],
+                     limit: float) -> (Tuple[int, int], dict):
+    x_start = 0 - int(img_size[0] * (1 - limit))
+    x_end = int(bg_size[0] - img_size[0] + (img_size[0] * (1 - limit)))
+    y_start = 0 - int(img_size[1] * (1 - limit))
+    y_end = int(bg_size[1] - img_size[1] + (img_size[1] * (1 - limit)))
+    return random.randint(x_start, x_end), random.randint(y_start, y_end)
+class LegacyRandomSolidColorBackgroundPasteTransformation(ImageTransformationInterface):
+    def __init__(self, size: Tuple[int, int], position_limit: float = 0.75):
+        self.size = size
+        self.position_limit = position_limit
+        self.color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        self.position = None
+
+    def apply_transformation(self, image: Image.Image) -> Image.Image:
+        bg = Image.new("RGBA", self.size, self.color)
+        self.position = _random_position(self.size, image.size, self.position_limit)
+        bg.paste(image, self.position, image.split()[3])
+        return bg
+
+    def update_metadata(self, metadata: list[dict]) -> list[dict]:
+        metadata.append(
+            {"class": self.__class__,
+             "type": "paste",
+             "method": "PIL.Image.Image.paste",
+             "parameters": {"color": self.color, "position_limit": self.position_limit, "position": self.position}})
+        return metadata
+
+
+class LegacyRandomImageBackgroundPasteTransformation(ImageTransformationInterface):
+    def __init__(self, size: Tuple[int, int], position_limit: float = 0.75):
+        self.size = size
+        self.position_limit = position_limit
+        self.bg_image = Image.open(
+            random.choice([i for i in pathlib.Path().glob("data/backgrounds/*")]))
+        self.position = None
+
+    def apply_transformation(self, image: Image.Image) -> Image.Image:
+        bg = Image.new("RGBA", self.size)
+        bg.paste(self.bg_image.resize(self.size), (0, 0))
+        self.position = _random_position(self.size, image.size, self.position_limit)
+        bg.paste(image, self.position, image.split()[3])
+        return bg
+
+    def update_metadata(self, metadata: list[dict]) -> list[dict]:
+        metadata.append(
+            {"class": self.__class__,
+             "type": "paste",
+             "method": "PIL.Image.Image.paste",
+             "parameters": {"bg_image": self.bg_image.filename, "position_limit": self.position_limit,
+                            "position": self.position}})
+        return metadata
