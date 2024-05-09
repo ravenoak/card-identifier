@@ -100,7 +100,7 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
         image, meta = pipeline.execute(src_image)
         meta["subject_noise"] = subject_noise
         image = image.convert(mode="RGB")
-        image_hash = hashlib.sha256(src_image.tobytes()).hexdigest()
+        image_hash = hashlib.sha256(image.tobytes()).hexdigest()
         meta["image_hash"] = image_hash
         filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
         image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
