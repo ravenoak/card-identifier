@@ -299,6 +299,7 @@ class RandomSolidColorBackgroundPasteTransformation(SolidColorBackgroundPasteTra
             mask
         )
 
+
 def _random_position(bg_size: Tuple[int, int],
                      img_size: Tuple[int, int],
                      limit: float) -> (Tuple[int, int], dict):
@@ -307,6 +308,8 @@ def _random_position(bg_size: Tuple[int, int],
     y_start = 0 - int(img_size[1] * (1 - limit))
     y_end = int(bg_size[1] - img_size[1] + (img_size[1] * (1 - limit)))
     return random.randint(x_start, x_end), random.randint(y_start, y_end)
+
+
 class LegacyRandomSolidColorBackgroundPasteTransformation(ImageTransformationInterface):
     def __init__(self, size: Tuple[int, int], position_limit: float = 0.75):
         self.size = size
