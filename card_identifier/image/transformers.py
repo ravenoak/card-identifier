@@ -9,6 +9,16 @@ from PIL import ImageOps
 from skimage.util import random_noise
 
 
+def _random_position(bg_size: Tuple[int, int],
+                     img_size: Tuple[int, int],
+                     limit: float) -> (Tuple[int, int], dict):
+    x_start = 0 - int(img_size[0] * (1 - limit))
+    x_end = int(bg_size[0] - img_size[0] + (img_size[0] * (1 - limit)))
+    y_start = 0 - int(img_size[1] * (1 - limit))
+    y_end = int(bg_size[1] - img_size[1] + (img_size[1] * (1 - limit)))
+    return random.randint(x_start, x_end), random.randint(y_start, y_end)
+
+
 class ImageTransformationInterface(metaclass=abc.ABCMeta):
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -298,16 +308,6 @@ class RandomSolidColorBackgroundPasteTransformation(SolidColorBackgroundPasteTra
             size,
             mask
         )
-
-
-def _random_position(bg_size: Tuple[int, int],
-                     img_size: Tuple[int, int],
-                     limit: float) -> (Tuple[int, int], dict):
-    x_start = 0 - int(img_size[0] * (1 - limit))
-    x_end = int(bg_size[0] - img_size[0] + (img_size[0] * (1 - limit)))
-    y_start = 0 - int(img_size[1] * (1 - limit))
-    y_end = int(bg_size[1] - img_size[1] + (img_size[1] * (1 - limit)))
-    return random.randint(x_start, x_end), random.randint(y_start, y_end)
 
 
 class LegacyRandomSolidColorBackgroundPasteTransformation(ImageTransformationInterface):
