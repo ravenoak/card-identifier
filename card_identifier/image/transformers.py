@@ -8,6 +8,8 @@ from PIL import Image
 from PIL import ImageOps
 from skimage.util import random_noise
 
+from card_identifier.metadata import TransformationMetadata
+
 
 def _random_position(bg_size: Tuple[int, int],
                      img_size: Tuple[int, int],
@@ -25,7 +27,7 @@ class ImageTransformationInterface(metaclass=abc.ABCMeta):
         return (hasattr(subclass, 'apply_transformation') and
                 callable(subclass.apply_transformation) and
                 hasattr(subclass, 'update_metadata') and
-                callable(subclass.update_metadata) or
+                callable(subclass.get_metadata) or
                 NotImplemented)
 
     @abc.abstractmethod
@@ -33,7 +35,7 @@ class ImageTransformationInterface(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def update_metadata(self, metadata: dict) -> dict:
+    def get_metadata(self) -> TransformationMetadata:
         raise NotImplementedError
 
 
@@ -51,13 +53,12 @@ class AddNoiseSaltNPepperTransformation(ImageTransformationInterface):
         arr = np.array(255 * arr, dtype="uint8")
         return Image.fromarray(arr)
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "noise",
-             "method": "skimage.util.random_noise",
-             "parameters": {"mode": "s&p", "amount": self.amount}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="noise",
+            method="skimage.util.random_noise",
+            parameters={"mode": "s&p", "amount": self.amount})
 
 
 class PercentResizeTransformation(ImageTransformationInterface):
@@ -67,13 +68,12 @@ class PercentResizeTransformation(ImageTransformationInterface):
     def apply_transformation(self, image: Image.Image) -> Image.Image:
         return image.resize((int(image.size[0] * self.percent), int(image.size[1] * self.percent)))
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "resize",
-             "method": "PIL.Image.Image.resize",
-             "parameters": {"percent": self.percent}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=str(self.__class__.__name__),
+            type="resize",
+            method="PIL.Image.Image.resize",
+            parameters={"percent": self.percent})
 
 
 class RandomPercentResizeTransformation(PercentResizeTransformation):
@@ -103,17 +103,16 @@ class PerspectiveTransformation(ImageTransformationInterface):
             fillcolor=None
         )
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "perspective",
-             "method": "PIL.Image.Image.transform",
-             "parameters": {"coefficients": self.coefficients,
-                            "method": self.method,
-                            "resample": self.resample,
-                            "fill": self.fill,
-                            "fillcolor": self.fillcolor}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="perspective",
+            method="PIL.Image.Image.transform",
+            parameters={"coefficients": self.coefficients,
+                        "method": self.method,
+                        "resample": self.resample,
+                        "fill": self.fill,
+                        "fillcolor": self.fillcolor})
 
 
 class WobblePerspectiveTransformation(PerspectiveTransformation):
@@ -169,11 +168,12 @@ class WobblePerspectiveTransformation(PerspectiveTransformation):
                  (x3 + adj_x, y3 + adj_y)],
                 [(0, 0), (w, 0), (w, h), (0, h)])
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata = super().update_metadata(metadata)
-        metadata[0]["parameters"]["wobble_percent"] = self.wobble_percent
-        metadata[0]["parameters"]["pa"] = self.pa
-        metadata[0]["parameters"]["pb"] = self.pb
+    def get_metadata(self) -> TransformationMetadata:
+        metadata = super().get_metadata()
+        metadata.transformation_class = self.__class__.__name__
+        metadata.parameters["wobble_percent"] = self.wobble_percent
+        metadata.parameters["pa"] = self.pa
+        metadata.parameters["pb"] = self.pb
         return metadata
 
 
@@ -184,13 +184,12 @@ class RotateTransformation(ImageTransformationInterface):
     def apply_transformation(self, image: Image.Image) -> Image.Image:
         return image.rotate(self.angle, expand=True)
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "rotate",
-             "method": "PIL.Image.Image.rotate",
-             "parameters": {"angle": self.angle}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="rotate",
+            method="PIL.Image.Image.rotate",
+            parameters={"angle": self.angle})
 
 
 class RandomRotateTransformation(RotateTransformation):
@@ -205,13 +204,12 @@ class AutocontrastTransformation(ImageTransformationInterface):
     def apply_transformation(self, image: Image.Image) -> Image.Image:
         return ImageOps.autocontrast(image, self.cutoff)
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "autocontrast",
-             "method": "PIL.ImageOps.autocontrast",
-             "parameters": {"cutoff": self.cutoff}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="autocontrast",
+            method="PIL.ImageOps.autocontrast",
+            parameters={"cutoff": self.cutoff})
 
 
 class RandomAutocontrastTransformation(AutocontrastTransformation):
@@ -226,13 +224,12 @@ class PosterizeTransformation(ImageTransformationInterface):
     def apply_transformation(self, image: Image.Image) -> Image.Image:
         return ImageOps.posterize(image, self.bits)
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "posterize",
-             "method": "PIL.ImageOps.posterize",
-             "parameters": {"bits": self.bits}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="posterize",
+            method="PIL.ImageOps.posterize",
+            parameters={"bits": self.bits})
 
 
 class RandomPosterizeTransformation(PosterizeTransformation):
@@ -247,13 +244,12 @@ class SolarizeTransformation(ImageTransformationInterface):
     def apply_transformation(self, image: Image.Image) -> Image.Image:
         return ImageOps.solarize(image, self.threshold)
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "solarize",
-             "method": "PIL.ImageOps.solarize",
-             "parameters": {"threshold": self.threshold}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="solarize",
+            method="PIL.ImageOps.solarize",
+            parameters={"threshold": self.threshold})
 
 
 class RandomSolarizeTransformation(SolarizeTransformation):
@@ -270,9 +266,9 @@ class RandomChoiceTransformation(ImageTransformationInterface):
         self._chosen = random.choice(self.transformations)
         return self._chosen.apply_transformation(image)
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
+    def get_metadata(self) -> list[dict]:
         if self._chosen:
-            return self._chosen.update_metadata(metadata)
+            return self._chosen.get_metadata()
         else:
             raise ValueError("No transformation chosen")
 
@@ -291,13 +287,12 @@ class SolidColorBackgroundPasteTransformation(ImageTransformationInterface):
         bg.paste(image, self.position, mask)
         return bg
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "paste",
-             "method": "PIL.Image.Image.paste",
-             "parameters": {"color": self.color, "position": self.position, "size": self.size, "mask": self.mask}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="paste",
+            method="PIL.Image.Image.paste",
+            parameters={"color": self.color, "position": self.position, "size": self.size, "mask": self.mask})
 
 
 class RandomSolidColorBackgroundPasteTransformation(SolidColorBackgroundPasteTransformation):
@@ -323,13 +318,12 @@ class LegacyRandomSolidColorBackgroundPasteTransformation(ImageTransformationInt
         bg.paste(image, self.position, image.split()[3])
         return bg
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "paste",
-             "method": "PIL.Image.Image.paste",
-             "parameters": {"color": self.color, "position_limit": self.position_limit, "position": self.position}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="paste",
+            method="PIL.Image.Image.paste",
+            parameters={"color": self.color, "position_limit": self.position_limit, "position": self.position})
 
 
 class LegacyRandomImageBackgroundPasteTransformation(ImageTransformationInterface):
@@ -347,11 +341,9 @@ class LegacyRandomImageBackgroundPasteTransformation(ImageTransformationInterfac
         bg.paste(image, self.position, image.split()[3])
         return bg
 
-    def update_metadata(self, metadata: list[dict]) -> list[dict]:
-        metadata.append(
-            {"class": self.__class__,
-             "type": "paste",
-             "method": "PIL.Image.Image.paste",
-             "parameters": {"bg_image": self.bg_image.filename, "position_limit": self.position_limit,
-                            "position": self.position}})
-        return metadata
+    def get_metadata(self) -> TransformationMetadata:
+        return TransformationMetadata(
+            transformation_class=self.__class__.__name__,
+            type="paste",
+            method="PIL.Image.Image.paste",
+            parameters={"bg_image": self.bg_image.filename, "position_limit": self.position_limit, "position": self.position})

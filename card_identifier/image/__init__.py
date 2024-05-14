@@ -3,6 +3,7 @@ import logging
 from PIL import Image
 
 from . import transformers
+from card_identifier.metadata import ImageMetadata
 
 logger = logging.getLogger("card_identifier.image")
 
@@ -17,10 +18,9 @@ class Pipeline:
         """Adds a transformation to the pipeline"""
         self._transformations.append(transformation)
 
-    def execute(self, image: Image.Image) -> tuple[Image.Image, dict]:
+    def execute(self, image: Image.Image, metadata: ImageMetadata) -> tuple[Image.Image, ImageMetadata]:
         """Executes the pipeline on the image"""
-        metadata = []
         for transformation in self._transformations:
             image = transformation.apply_transformation(image)
-            metadata = transformation.update_metadata(metadata)
+            metadata.transformation_metadata.append(transformation.get_metadata())
         return image, metadata
