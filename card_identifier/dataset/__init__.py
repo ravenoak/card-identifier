@@ -10,6 +10,7 @@ from PIL import Image
 from card_identifier.cards.pokemon import get_legal_sets
 from card_identifier.data import get_image_dir, get_dataset_dir
 from card_identifier.image import transformers, Pipeline
+from card_identifier.metadata import metadata_writer, ImageMetadata
 from card_identifier.util import setup_logging
 
 DEFAULT_WORKING_SIZE = (1024, 1024)
@@ -97,12 +98,13 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
             transformers.LegacyRandomSolidColorBackgroundPasteTransformation(DEFAULT_WORKING_SIZE),
             transformers.LegacyRandomImageBackgroundPasteTransformation(DEFAULT_WORKING_SIZE),
         ]))
-        image, meta = pipeline.execute(src_image)
-        meta["subject_noise"] = subject_noise
+        meta = ImageMetadata(image_path="", image_id="", transformation_metadata=[], image_hash="")
+        image, meta = pipeline.execute(src_image, meta)
         image = image.convert(mode="RGB")
         image_hash = hashlib.sha256(image.tobytes()).hexdigest()
-        meta["image_hash"] = image_hash
+        meta.image_hash = image_hash
         filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
+        meta.image_path = filename
         image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
-        # TODO: Figure out what to to with the meta data.
+        metadata_writer.write({"filename": filename, **meta})
         logger.debug(f"Generated image with meta: {meta}")
