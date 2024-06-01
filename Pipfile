@@ -4,15 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-click = "*"
-numpy = "*"
 opencv-contrib-python = "*"
 pandas = "*"
-pillow = "*"
-pokemontcgsdk = "*"
-retrying = "*"
-requests = "*"
-scikit-image = "*"
 scikit-learn = "*"
 streamlit = "*"
 torch = "*"
@@ -22,13 +15,14 @@ scikit-build = "*"
 pythran = "*"
 scipy = "*"
 cython = "*"
+pydantic = "~=2.6"
+pydantic-settings = "~=2.2"
+jsonlines = "~=4.0"
+collectable-card-identifier = {editable = true, path = "."}
 
 [dev-packages]
 jupyter = "*"
+collectable-card-identifier = {file = ".", editable = true}
 
 [requires]
 python_version = "3.9"
-
-[packages.collectable-card-identifier]
-editable = true
-path = "."

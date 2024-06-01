@@ -9,6 +9,7 @@ import click
 from card_identifier.data import get_dataset_dir, get_pickle_dir, NAMESPACES
 from card_identifier.dataset import DEFAULT_OUT_EXT, gen_random_dataset
 from card_identifier.cards import pokemon
+from card_identifier.config import Settings
 from card_identifier.util import setup_logging, load_random_state
 
 logger = logging.getLogger("card_identifier.cli")
@@ -58,7 +59,8 @@ def create_random_training_images(num: int, card_type: str, id_filter: str = Non
 @click.pass_context
 def cli(ctx, debug):
     ctx.ensure_object(dict)
-    ctx.obj["DEBUG"] = debug
+    ctx.obj["settings"] = Settings()
+    ctx.obj["settings"].debug = debug
     setup_logging(debug)
 
 

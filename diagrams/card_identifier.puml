@@ -1,0 +1,29 @@
+@startuml
+
+class dataset.DatasetManager {
+    -IDatasetStorageManager datasetStorageManager
+    -ICardManager cardManager
+    -ICardImageManager cardImageManager
+}
+
+interface cards.ICardImageManager {
+}
+
+interface cards.ICardManager {
+}
+
+interface dataset.storage.IDatasetStorageManager {
+}
+
+class dataset.storage.local.LocalDatasetStorageManager implements dataset.storage.IDatasetStorageManager
+class dataset.storage.local.LocalDatasetStorageManager {
+}
+
+class cards.pokemon.CardManager implements cards.ICardManager
+class cards.pokemon.CardManager implements cards.ICardImageManager
+class cards.pokemon.CardManager {
+}
+
+
+
+@enduml
