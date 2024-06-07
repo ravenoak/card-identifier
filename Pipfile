@@ -15,8 +15,6 @@ scikit-build = "*"
 pythran = "*"
 scipy = "*"
 cython = "*"
-pydantic = "~=2.6"
-pydantic-settings = "~=2.2"
 jsonlines = "~=4.0"
 collectable-card-identifier = {editable = true, path = "."}
 

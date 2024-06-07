@@ -1,8 +1,17 @@
+from collections.abc import dict_keys
+from typing import Tuple, Type
+
 from pydantic import BaseModel, model_validator, ValidationError
 
 from card_identifier.storage.filesystem import FileSystemConfig, FileSystemDriver
 
-available_storage_types = ['filesystem']
+driver_map = {
+    'filesystem': (FileSystemConfig, FileSystemDriver)
+}
+
+
+def get_available_drivers() -> dict_keys[str, tuple[Type[FileSystemConfig], Type[FileSystemDriver]]]:
+    return driver_map.keys()
 
 
 class StorageConfig(BaseModel):
@@ -26,23 +35,3 @@ class StorageConfig(BaseModel):
             raise ValueError(f"Invalid configuration for {type_}: {e}")
 
         return values
-
-
-class ImageStorage:
-    driver_map = {
-        'filesystem': (FileSystemConfig, FileSystemDriver)
-    }
-
-    def __init__(self, config: StorageConfig):
-        self.config = config
-        self._driver = None
-
-    @property
-    def driver(self):
-        if not self._driver:
-            config_class, driver_class = self.driver_map.get(self.config.storage_type)
-            if isinstance(self.config.settings, config_class):
-                self._driver = driver_class(self.config.settings)
-            else:
-                raise ValueError("Unsupported storage type or invalid settings.")
-        return self._driver

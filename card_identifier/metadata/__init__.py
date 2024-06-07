@@ -25,9 +25,8 @@ class TransformationMetadata:
 
 @dataclass
 class ImageMetadata:
-    image_path: str
     image_hash: str
-    image_id: str
+    card_id: str
     transformation_metadata: list[TransformationMetadata]
 
 

@@ -6,9 +6,10 @@ import random
 
 import click
 
+from card_identifier.application import ImageService, CardService
 from card_identifier.data import get_dataset_dir, get_pickle_dir, NAMESPACES
 from card_identifier.dataset import DEFAULT_OUT_EXT, gen_random_dataset
-from card_identifier.cards import pokemon
+from card_identifier.games import pokemon
 from card_identifier.config import Settings
 from card_identifier.util import setup_logging, load_random_state
 
@@ -86,6 +87,16 @@ def card_data(ctx, card_type, images, force, refresh):
             logging.info("downloading card images")
             im.download_card_images(cm.card_data.values(), force)
             im.refresh_card_image_map()
+
+
+@click.command()
+@click.option('--force', is_flag=True, help='Force download of images even if they already exist.')
+def download_images(force):
+    """Download images for all cards."""
+    card_service = CardService()
+    image_service = ImageService()
+    cards = card_service.get_all()
+    image_service.download_card_images(cards, force=force)
 
 
 @cli.command()

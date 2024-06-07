@@ -3,21 +3,16 @@ import pathlib
 import pickle
 from typing import Dict, List
 
-from pokemontcgsdk import Card, Set
+from pokemontcgsdk import Card as SDKCard, Set as SDKSet
 
 from card_identifier.data import get_image_dir, get_pickle_dir
 from card_identifier.util import download_save_image
+from card_identifier.model import Card, Set, CardRepositoryInterface, SetRepositoryInterface, ImageManagerInterface
 
 logger = logging.getLogger("card_identifier.pokemon")
 
 
-def get_legal_sets():
-    return set(
-        (s.id for s in Set.where(q="legalities.standard:legal"))).union(
-        set((s.id for s in Set.where(q="legalities.expanded:legal"))))
-
-
-class ImageManager:
+class ImageManager(ImageManagerInterface):
     """Manages the original images for the Pokémon TCG"""
     def __init__(self):
         self.pickle_dir = get_pickle_dir("pokemon")
@@ -59,7 +54,7 @@ class ImageManager:
         return self.card_image_map[card_id]
 
     def download_card_images(self, cards: List[Card], force: bool = False):
-        """Downloads the images for the given cards"""
+        """Downloads the images for the given games"""
         for card in cards:
             img_name = pathlib.Path(card.id + ".png")
             image_path = self.image_dir.joinpath(img_name)
@@ -72,19 +67,19 @@ class ImageManager:
 class CardManager:
     """Manages the card and set data for the Pokémon TCG"""
     def __init__(self):
-        self.card_path = get_pickle_dir("pokemon").joinpath("cards.pickle")
+        self.card_path = get_pickle_dir("pokemon").joinpath("games.pickle")
         self.set_path = get_pickle_dir("pokemon").joinpath("sets.pickle")
         self.set_card_path = get_pickle_dir("pokemon").joinpath(
             "cards_by_set.pickle")
-        self.card_data = self.get_data("cards")
+        self.card_data = self.get_data("games")
         self.set_data = self.get_data("sets")
         self.set_card_map = self.get_set_card_map()
 
     def get_data(self, data_item: str, overwrite: bool = False) -> Dict:
         """Gets the data for the given item, either from the pickle or from the API"""
-        if data_item == "cards":
+        if data_item == "games":
             path = self.card_path
-            logger.info("getting cards")
+            logger.info("getting games")
             items = Card.all
         elif data_item == "sets":
             path = self.set_path
@@ -125,6 +120,32 @@ class CardManager:
 
     def refresh_data(self):
         """Refreshes the card and set data"""
-        self.card_data = self.get_data("cards", True)
+        self.card_data = self.get_data("games", True)
         self.set_data = self.get_data("sets", True)
         self.set_card_map = self.get_set_card_map(True)
+
+
+class CardRepository(CardRepositoryInterface):
+    def get_all(self):
+        sdk_cards = SDKCard.all()
+        return [Card(c.id, c.name, c.image_url) for c in sdk_cards]
+
+    def get_cards_from_sets(self, set_ids: List[str]) -> List[Card]:
+        cards = set()
+        for set_id in set_ids:
+            cards.union()
+
+
+class SetRepository(SetRepositoryInterface):
+    def __init__(self, legality_query: set = ("standard", "expanded")):
+        self.legality_query = legality_query
+
+    def get_all(self):
+        sdk_sets = SDKSet.all()
+        return [Set(s.id, s.name, s.series, s.total_cards, s.release_date) for s in sdk_sets]
+
+    def get_legal_sets(self):
+        legal_sets = set()
+        for rule_set in self.legality_query:
+            legal_sets.union((Set(s.id, s.name, s.series, s.total_cards, s.release_date) for s in SDKSet.where(q=f"legalities.{rule_set}:legal")))
+        return legal_sets
