@@ -1,6 +1,5 @@
 import logging
 import pathlib
-import pickle
 from typing import Dict, List
 
 from pokemontcgsdk import Card, Set
@@ -9,6 +8,7 @@ from card_identifier.cards.base import BaseCardManager
 
 from card_identifier.data import get_image_dir, get_pickle_dir
 from card_identifier.util import download_save_image
+from card_identifier.storage import load_pickle, save_pickle
 
 logger = logging.getLogger("card_identifier.pokemon")
 
@@ -38,18 +38,16 @@ class ImageManager:
     def load_card_image_map(self) -> Dict[str, pathlib.Path]:
         """Loads the card_image_map pickle if it exists, otherwise returns an empty dict"""
         if self.card_image_file.exists():
-            with open(self.card_image_file, "rb") as file:
-                logger.info("opening card_image_map pickle")
-                return pickle.load(file)
+            logger.info("opening card_image_map pickle")
+            return load_pickle(self.card_image_file, default={})
         else:
             logger.info("not loading card_image_map: missing")
             return {}
 
     def save_card_image_map(self):
         """Saves the card_image_map pickle"""
-        with open(self.card_image_file, "wb") as file:
-            logger.info("saving card_image_map pickle")
-            pickle.dump(self.card_image_map, file)
+        logger.info("saving card_image_map pickle")
+        save_pickle(self.card_image_map, self.card_image_file)
 
     def refresh_card_image_map(self):
         """Refreshes the card_image_map pickle"""
@@ -96,23 +94,20 @@ class CardManager(BaseCardManager):
             raise ValueError(f"invalid item: {data_item}")
         if path.exists() and not overwrite:
             logger.info(f"loading {data_item}")
-            with open(path, "rb") as file:
-                return pickle.load(file)
+            return load_pickle(path, default={})
         else:
             data = dict()
             for item in items():
                 data[item.id] = item
             logger.info(f"saving {data_item} to {path}")
-            with open(path, "wb") as file:
-                pickle.dump(data, file)
+            save_pickle(data, path)
             return data
 
     def get_set_card_map(self, overwrite=False):
         """Gets the set_card_map, either from the pickle or from the API"""
         if self.set_card_path.exists() and not overwrite:
             logger.info("loading cards_by_set")
-            with open(self.set_card_path, "rb") as file:
-                return pickle.load(file)
+            return load_pickle(self.set_card_path, default={})
         else:
             set_card_map = dict()
             logger.info("computing cards_by_set")
@@ -121,8 +116,7 @@ class CardManager(BaseCardManager):
                     set_card_map[card.set.id] = list()
                 set_card_map[card.set.id].append(card.id)
             logger.info(f"saving cards_by_set to {self.set_card_path}")
-            with open(self.set_card_path, "wb") as file:
-                pickle.dump(set_card_map, file)
+            save_pickle(set_card_map, self.set_card_path)
             return set_card_map
 
     def refresh_data(self):
