@@ -2,14 +2,15 @@ import hashlib
 import logging
 import pathlib
 import random
-from typing import Tuple
+import json
+from typing import Tuple, List
 
 from PIL import Image
 
 import multiprocessing as mp
 import pickle
 
-from card_identifier.image import transformers, background, func_map
+from card_identifier.image import transformers, background, func_map, ImageMeta
 from card_identifier.data import get_dataset_dir, get_image_dir, get_pickle_dir
 from card_identifier.util import setup_logging, load_random_state
 
@@ -20,8 +21,16 @@ DEFAULT_OUT_EXT = "png"
 logger = logging.getLogger(__name__)
 
 
-def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, dataset_size: int, xform: bool = False) -> None:
-    """Generates a random dataset of the given size from the given image."""
+def gen_random_dataset(
+    image_path: pathlib.Path,
+    save_path: pathlib.Path,
+    dataset_size: int,
+    xform: bool = False,
+) -> List[ImageMeta]:
+    """Generate a random dataset of the given size from the given image.
+
+    Returns a list of :class:`ImageMeta` describing each generated image.
+    """
     # TODO: Need to handle logging better in multiprocessing.
     setup_logging(False)
     if not image_path.exists() and image_path.is_file():
@@ -32,6 +41,7 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
     logger.info(f"Generating {dataset_size} images from {image_path}")
     src_image = Image.open(image_path)
     src_image = src_image.convert(mode="RGBA")
+    metas: List[ImageMeta] = []
     for iteration in range(0, dataset_size):
         logger.debug(f"Generating image {image_path} {iteration} of {dataset_size}")
         meta = {"transform": xform}
@@ -57,8 +67,12 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
         image_hash = hashlib.sha256(base_image.tobytes()).hexdigest()
         filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
         base_image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
-        # TODO: Figure out what to to with the meta data.
+        image_meta = ImageMeta(filename=filename, details=meta.copy())
+        with open(save_path.joinpath(f"{image_hash}.json"), "w") as meta_file:
+            json.dump({"filename": image_meta.filename, "details": image_meta.details}, meta_file)
+        metas.append(image_meta)
         logger.debug(f"Generated image with meta: {meta}")
+    return metas
 
 
 class DatasetBuilder:
