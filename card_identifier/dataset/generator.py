@@ -6,8 +6,12 @@ from typing import Tuple
 
 from PIL import Image
 
+import multiprocessing as mp
+import pickle
+
 from card_identifier.image import transformers, background, func_map
-from card_identifier.util import setup_logging
+from card_identifier.data import get_dataset_dir, get_image_dir, get_pickle_dir
+from card_identifier.util import setup_logging, load_random_state
 
 DEFAULT_WORKING_SIZE: Tuple[int, int] = (1024, 1024)
 DEFAULT_OUT_SIZE: Tuple[int, int] = (224, 224)
@@ -55,3 +59,57 @@ def gen_random_dataset(image_path: pathlib.Path, save_path: pathlib.Path, datase
         base_image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
         # TODO: Figure out what to to with the meta data.
         logger.debug(f"Generated image with meta: {meta}")
+
+
+class DatasetBuilder:
+    """Prepare work queues for dataset generation and execute them."""
+
+    def __init__(self, card_type: str, num_images: int, id_filter: str | None = None):
+        self.card_type = card_type
+        self.num_images = num_images
+        self.id_filter = id_filter
+
+        self.pickle_dir = get_pickle_dir(card_type)
+        self.image_dir = get_image_dir(card_type)
+        self.dataset_dir = get_dataset_dir(card_type)
+
+    def build_work(self) -> list[tuple[pathlib.Path, pathlib.Path, int]]:
+        """Return a list of work items for dataset generation."""
+        load_random_state(self.pickle_dir)
+        work: list[tuple[pathlib.Path, pathlib.Path, int]] = []
+
+        with open(self.pickle_dir.joinpath("card_image_map.pickle"), "rb") as file:
+            logger.debug("opening card_image_map pickle")
+            id_image_map = pickle.load(file)
+
+        logger.info("creating work queue")
+        for card_id, path in id_image_map.items():
+            original_path = self.image_dir.joinpath(path)
+            if not original_path.exists():
+                logger.error(f"image {path} does not exist")
+                continue
+            if self.id_filter is None or card_id.startswith(self.id_filter):
+                set_id = card_id.split("-")[0]
+                save_path = self.dataset_dir.joinpath(f"{set_id}/{card_id}")
+                if not save_path.exists():
+                    save_path.mkdir(parents=True)
+                    save_num = self.num_images
+                else:
+                    save_num = self.num_images - len(list(save_path.glob(f"*.{DEFAULT_OUT_EXT}")))
+                    if save_num <= 0:
+                        continue
+                logger.info(f"adding {card_id} to work, generating {save_num} images")
+                work.append((original_path, save_path, save_num))
+
+        return work
+
+    def run(self) -> None:
+        """Execute dataset generation using multiprocessing."""
+        work = self.build_work()
+        if not work:
+            logger.warning("no work items generated")
+            return
+        mp.set_start_method("spawn", force=True)
+        with mp.Pool(processes=None) as pool:
+            logger.info("starting gen_random_dataset in pool")
+            pool.starmap(gen_random_dataset, work)
