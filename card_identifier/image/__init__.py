@@ -1,7 +1,7 @@
 import logging
 
 from . import background
-from . import transformers
+from . import transformers  # noqa: F401
 
 func_map = {
     "random_solid_color": background.random_solid_color,
