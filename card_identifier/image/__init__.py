@@ -2,6 +2,7 @@ import logging
 
 from . import background
 from . import transformers  # noqa: F401
+from .meta import ImageMeta
 
 func_map = {
     "random_solid_color": background.random_solid_color,
