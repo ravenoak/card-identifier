@@ -5,6 +5,8 @@ from typing import Dict, List
 
 from pokemontcgsdk import Card, Set
 
+from card_identifier.cards.base import BaseCardManager
+
 from card_identifier.data import get_image_dir, get_pickle_dir
 from card_identifier.util import download_save_image
 
@@ -69,7 +71,7 @@ class ImageManager:
                     self.card_image_map[card.id] = img_name
 
 
-class CardManager:
+class CardManager(BaseCardManager):
     """Manages the card and set data for the Pokémon TCG"""
     def __init__(self):
         self.card_path = get_pickle_dir("pokemon").joinpath("cards.pickle")
