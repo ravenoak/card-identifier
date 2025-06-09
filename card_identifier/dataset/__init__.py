@@ -57,7 +57,7 @@ class DatasetManager:
             logger.info("making symlinks for all cards")
         elif training_type == "legal":
             logger.info("making symlinks for legal cards")
-            legal_sets = get_legal_sets()
+            _legal_sets = get_legal_sets()
         elif training_type == "sets":
             logger.info("making symlinks for cards in sets")
         else:

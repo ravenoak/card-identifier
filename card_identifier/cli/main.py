@@ -1,12 +1,16 @@
 import logging
 import multiprocessing as mp
-import pathlib
 import pickle
 import random
 
 import click
 
-from card_identifier.data import get_dataset_dir, get_pickle_dir, NAMESPACES
+from card_identifier.data import (
+    get_dataset_dir,
+    get_pickle_dir,
+    get_image_dir,
+    NAMESPACES,
+)
 from card_identifier.dataset.generator import DEFAULT_OUT_EXT, gen_random_dataset
 from card_identifier.cards import pokemon
 from card_identifier.util import setup_logging, load_random_state
@@ -22,18 +26,18 @@ def create_random_training_images(num: int, card_type: str, id_filter: str = Non
         logger.debug("opening card_image_map pickle")
         id_image_map = pickle.load(file)
         # TODO: figure out how to sort id_image_map
+    image_dir = get_image_dir(card_type)
     work = []
     logger.info("creating work queue")
     for card_id, path in id_image_map.items():
-        data_path = f"data/images/originals/{card_type}/"
-        original_path = pathlib.Path(data_path).joinpath(path)
+        original_path = image_dir.joinpath(path)
         if not original_path.exists():
             logger.error(f"image {path} does not exist")
             continue
         if id_filter is None or card_id.startswith(id_filter):
             logger.debug(f"evaluating {card_id} for work")
             set_id = card_id.split("-")[0]
-            save_path = pathlib.Path(dataset_dir).joinpath(
+            save_path = dataset_dir.joinpath(
                 f"{set_id}/{card_id}")
             if not save_path.exists():
                 save_path.mkdir(parents=True)
@@ -44,9 +48,11 @@ def create_random_training_images(num: int, card_type: str, id_filter: str = Non
                     continue
             logger.info(f"adding {card_id} to work, generating {save_num} images")
             work.append(
-                (pathlib.Path(data_path).joinpath(path),
-                 save_path,
-                 save_num)
+                (
+                    image_dir.joinpath(path),
+                    save_path,
+                    save_num,
+                )
             )
     with mp.Pool(processes=None) as pool:
         logger.info("starting gen_dataset in pool")

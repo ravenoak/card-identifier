@@ -1,8 +1,9 @@
-import pathlib
 import random
 from typing import Tuple
 
 from PIL import Image
+
+from card_identifier.config import config
 
 BACKGROUND_TYPES = [
     "random_solid_color",
@@ -19,8 +20,7 @@ def random_solid_color(size: tuple[int, int], meta) -> Image.Image:
 
 
 def random_bg_image(size: tuple[int, int], meta) -> Image.Image:
-    bg_image = Image.open(
-        random.choice([i for i in pathlib.Path().glob("data/backgrounds/*")]))
+    bg_image = Image.open(random.choice([i for i in config.backgrounds_dir.glob("*")]))
     meta["bg_image"] = bg_image.filename
     img = Image.new("RGBA", size)
     img.paste(bg_image.resize(size), (0, 0))
