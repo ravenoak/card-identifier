@@ -1,8 +1,10 @@
 import logging
 import pathlib
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pokemontcgsdk import Card, Set
+
+from .api_client import CardAPIClient, PokemonTCGSDKClient
 
 from card_identifier.cards.base import BaseCardManager
 
@@ -71,7 +73,9 @@ class ImageManager:
 
 class CardManager(BaseCardManager):
     """Manages the card and set data for the Pokémon TCG"""
-    def __init__(self):
+
+    def __init__(self, api_client: Optional[CardAPIClient] = None):
+        self.api_client = api_client or PokemonTCGSDKClient()
         self.card_path = get_pickle_dir("pokemon").joinpath("cards.pickle")
         self.set_path = get_pickle_dir("pokemon").joinpath("sets.pickle")
         self.set_card_path = get_pickle_dir("pokemon").joinpath(
@@ -85,11 +89,11 @@ class CardManager(BaseCardManager):
         if data_item == "cards":
             path = self.card_path
             logger.info("getting cards")
-            items = Card.all
+            items = self.api_client.iter_cards
         elif data_item == "sets":
             path = self.set_path
             logger.info("getting sets")
-            items = Set.all
+            items = self.api_client.iter_sets
         else:
             raise ValueError(f"invalid item: {data_item}")
         if path.exists() and not overwrite:
