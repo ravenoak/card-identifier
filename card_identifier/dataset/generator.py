@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import os
 import pathlib
 import random
 import json
@@ -32,8 +33,8 @@ def gen_random_dataset(
 
     Returns a list of :class:`ImageMeta` describing each generated image.
     """
-    # TODO: Need to handle logging better in multiprocessing.
-    setup_logging(False)
+    debug = os.getenv("CARDIDENT_DEBUG", "0") == "1"
+    setup_logging(debug)
     if not image_path.exists() or not image_path.is_file():
         logger.error(f"Image path does not exist or is not a file: {image_path}")
         return
@@ -134,6 +135,8 @@ class DatasetBuilder:
         if not work:
             logger.warning("no work items generated")
             return
+        debug = logging.getLogger().isEnabledFor(logging.DEBUG)
+        os.environ["CARDIDENT_DEBUG"] = "1" if debug else "0"
         mp.set_start_method("spawn", force=True)
         with mp.Pool(processes=None) as pool:
             logger.info("starting gen_random_dataset in pool")

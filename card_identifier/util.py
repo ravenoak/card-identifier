@@ -1,4 +1,5 @@
 import logging
+import multiprocessing as mp
 import pathlib
 from urllib.error import HTTPError
 
@@ -9,13 +10,15 @@ logger = logging.getLogger(__name__)
 
 
 def setup_logging(debug: bool = False):
-    level = logging.INFO
-    if debug:
-        level = logging.DEBUG
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=level,
-    )
+    level = logging.DEBUG if debug else logging.INFO
+    fmt = "%(asctime)s - %(processName)s - %(name)s - %(levelname)s - %(message)s"
+    logging.basicConfig(format=fmt, level=level)
+
+    mp_logger = mp.get_logger()
+    mp_logger.setLevel(level)
+    if not mp_logger.handlers:
+        for handler in logging.getLogger().handlers:
+            mp_logger.addHandler(handler)
 
 
 def retry_if_http_error(e: Exception):
