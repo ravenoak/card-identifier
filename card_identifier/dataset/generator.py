@@ -66,7 +66,8 @@ def gen_random_dataset(
         base_image = base_image.convert(mode="RGB")
         image_hash = hashlib.sha256(base_image.tobytes()).hexdigest()
         filename = f"{image_hash}.{DEFAULT_OUT_EXT}"
-        base_image.resize(DEFAULT_OUT_SIZE).save(open(save_path.joinpath(filename), "wb"), DEFAULT_OUT_EXT)
+        with open(save_path.joinpath(filename), "wb") as out_file:
+            base_image.resize(DEFAULT_OUT_SIZE).save(out_file, DEFAULT_OUT_EXT)
         image_meta = ImageMeta(filename=filename, details=meta.copy())
         with open(save_path.joinpath(f"{image_hash}.json"), "w") as meta_file:
             json.dump({"filename": image_meta.filename, "details": image_meta.details}, meta_file)

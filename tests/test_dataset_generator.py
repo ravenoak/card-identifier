@@ -23,3 +23,27 @@ def test_gen_random_dataset_invalid_save_path(tmp_path):
     save_path = tmp_path / "no_dir" / "sub"
     with pytest.raises(ValueError):
         generator.gen_random_dataset(image, save_path, 1)
+
+
+def test_gen_random_dataset_no_fd_leak(tmp_path, monkeypatch):
+    from PIL import Image
+    import os
+
+    image_path = tmp_path / "img.png"
+    Image.new("RGB", (10, 10), color=(255, 0, 0)).save(image_path)
+    save_path = tmp_path / "out"
+    save_path.mkdir()
+
+    from card_identifier.config import config
+
+    config.backgrounds_dir = tmp_path
+    monkeypatch.setattr(generator.background, "BACKGROUND_TYPES", ["random_solid_color"])
+    monkeypatch.setattr(generator, "func_map", {"random_solid_color": generator.background.random_solid_color})
+    monkeypatch.setattr(generator.transformers, "random_perspective_transform", lambda img, wobble_percent=0.2: (img, {}))
+
+    before = len(os.listdir("/proc/self/fd"))
+    result = generator.gen_random_dataset(image_path, save_path, 3)
+    after = len(os.listdir("/proc/self/fd"))
+
+    assert len(result) == 3
+    assert before == after
