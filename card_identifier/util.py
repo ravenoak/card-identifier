@@ -1,12 +1,9 @@
 import logging
 import pathlib
-import random
 from urllib.error import HTTPError
 
 import requests
 from retrying import retry
-
-from .storage import save_pickle, load_pickle
 
 logger = logging.getLogger(__name__)
 
@@ -43,16 +40,3 @@ def download_save_image(url: str, path: pathlib.Path) -> bool:
     else:
         logger.error(f"error retrieving image: {url}")
         return False
-
-
-def save_random_state(pickle_dir: pathlib.Path):
-    save_pickle(random.getstate(), pickle_dir.joinpath("random_state.pickle"))
-
-
-def load_random_state(pickle_dir: pathlib.Path):
-    random_state_pickle = pickle_dir.joinpath("random_state.pickle")
-    state = load_pickle(random_state_pickle)
-    if state is not None:
-        random.setstate(state)
-    else:
-        logger.info("not loading random_state: missing")
