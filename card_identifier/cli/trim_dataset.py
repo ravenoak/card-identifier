@@ -5,7 +5,7 @@ import click
 
 from card_identifier.data import get_dataset_dir, get_pickle_dir, NAMESPACES
 from card_identifier.dataset.generator import DEFAULT_OUT_EXT
-from card_identifier.util import load_random_state
+from card_identifier.storage import load_random_state
 
 logger = logging.getLogger(__name__)
 
