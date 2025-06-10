@@ -10,3 +10,5 @@ func_map = {
 }
 
 logger = logging.getLogger("card_identifier.image")
+
+__all__ = ["func_map", "ImageMeta"]
