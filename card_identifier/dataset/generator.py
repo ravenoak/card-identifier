@@ -33,7 +33,7 @@ def gen_random_dataset(
     """
     # TODO: Need to handle logging better in multiprocessing.
     setup_logging(False)
-    if not image_path.exists() and image_path.is_file():
+    if not image_path.exists() or not image_path.is_file():
         logger.error(f"Image path does not exist or is not a file: {image_path}")
         return
     if not save_path.exists():
