@@ -17,6 +17,7 @@ logger = logging.getLogger("card_identifier.dataset")
 
 class DatasetManager:
     """Manages the image dataset for training the model on the specified TCG"""
+
     CARD_IMAGE_MAP = "card_image_map.pickle"
 
     def __init__(self, namespace: str):
@@ -46,7 +47,11 @@ class DatasetManager:
         """Creates a map of card id to image path for all images in the dataset_dir"""
         card_dataset_map = {}
         for img in self.dataset_dir.glob("**/*.png"):
-            _id = img.parts[5]
+            rel_parts = img.relative_to(self.dataset_dir).parts
+            if len(rel_parts) < 2:
+                logger.error(f"unexpected dataset path: {img}")
+                continue
+            _id = rel_parts[1]
             if not card_dataset_map.get(_id):
                 card_dataset_map[_id] = {"num_img": 0, "img_paths": []}
             card_dataset_map[_id]["img_paths"].append(pathlib.Path(img))
