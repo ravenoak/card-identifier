@@ -17,6 +17,7 @@ def test_gen_random_dataset_invalid_image_path(tmp_path, caplog):
         "does not exist or is not a file" in record.message for record in caplog.records
     )
 
+
 def test_gen_random_dataset_invalid_save_path(tmp_path):
     image = tmp_path / "img.png"
     image.write_bytes(b"fake")
@@ -37,9 +38,19 @@ def test_gen_random_dataset_no_fd_leak(tmp_path, monkeypatch):
     from card_identifier.config import config
 
     config.backgrounds_dir = tmp_path
-    monkeypatch.setattr(generator.background, "BACKGROUND_TYPES", ["random_solid_color"])
-    monkeypatch.setattr(generator, "func_map", {"random_solid_color": generator.background.random_solid_color})
-    monkeypatch.setattr(generator.transformers, "random_perspective_transform", lambda img, wobble_percent=0.2: (img, {}))
+    monkeypatch.setattr(
+        generator.background, "BACKGROUND_TYPES", ["random_solid_color"]
+    )
+    monkeypatch.setattr(
+        generator,
+        "func_map",
+        {"random_solid_color": generator.background.random_solid_color},
+    )
+    monkeypatch.setattr(
+        generator.transformers,
+        "random_perspective_transform",
+        lambda img, wobble_percent=0.2: (img, {}),
+    )
 
     before = len(os.listdir("/proc/self/fd"))
     result = generator.gen_random_dataset(image_path, save_path, 3)

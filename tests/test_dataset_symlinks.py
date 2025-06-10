@@ -15,11 +15,13 @@ def _create_dataset(tmp_path: Path) -> Path:
 def test_mk_symlinks_all(tmp_path, monkeypatch):
     monkeypatch.setenv("CARDIDENT_DATA_ROOT", str(tmp_path))
     from card_identifier.config import config
+
     config.data_root = Path(tmp_path)
     config.images_dir = config.data_root / "images" / "originals"
     config.datasets_dir = config.data_root / "images" / "dataset"
     dataset_root = _create_dataset(tmp_path)
     from card_identifier.dataset import DatasetManager
+
     dm = DatasetManager("pokemon")
     dm.mk_symlinks("all")
     link = dataset_root / "symlinks" / "all" / "s1-c1" / "img1.png"
@@ -32,12 +34,14 @@ def test_mk_symlinks_all(tmp_path, monkeypatch):
 def test_mk_symlinks_legal(tmp_path, monkeypatch):
     monkeypatch.setenv("CARDIDENT_DATA_ROOT", str(tmp_path))
     from card_identifier.config import config
+
     config.data_root = Path(tmp_path)
     config.images_dir = config.data_root / "images" / "originals"
     config.datasets_dir = config.data_root / "images" / "dataset"
     dataset_root = _create_dataset(tmp_path)
     monkeypatch.setattr("card_identifier.dataset.get_legal_sets", lambda: {"s1"})
     from card_identifier.dataset import DatasetManager
+
     dm = DatasetManager("pokemon")
     dm.mk_symlinks("legal")
     link = dataset_root / "symlinks" / "legal" / "s1-c1" / "img1.png"
@@ -49,11 +53,13 @@ def test_mk_symlinks_legal(tmp_path, monkeypatch):
 def test_mk_symlinks_sets(tmp_path, monkeypatch):
     monkeypatch.setenv("CARDIDENT_DATA_ROOT", str(tmp_path))
     from card_identifier.config import config
+
     config.data_root = Path(tmp_path)
     config.images_dir = config.data_root / "images" / "originals"
     config.datasets_dir = config.data_root / "images" / "dataset"
     dataset_root = _create_dataset(tmp_path)
     from card_identifier.dataset import DatasetManager
+
     dm = DatasetManager("pokemon")
     dm.mk_symlinks("sets")
     link = dataset_root / "symlinks" / "sets" / "s1" / "s1-c1" / "img1.png"

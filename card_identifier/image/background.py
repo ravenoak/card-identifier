@@ -12,9 +12,7 @@ BACKGROUND_TYPES = [
 
 
 def random_solid_color(size: tuple[int, int], meta) -> Image.Image:
-    bg_color = (random.randint(0, 255),
-                random.randint(0, 255),
-                random.randint(0, 255))
+    bg_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     meta["bg_color"] = bg_color
     return Image.new("RGBA", size, bg_color)
 
@@ -27,9 +25,9 @@ def random_bg_image(size: tuple[int, int], meta) -> Image.Image:
     return img
 
 
-def random_placement(bg_size: Tuple[int, int],
-                     img_size: Tuple[int, int],
-                     limit: float) -> (Tuple[int, int], dict):
+def random_placement(
+    bg_size: Tuple[int, int], img_size: Tuple[int, int], limit: float
+) -> (Tuple[int, int], dict):
     x_start = 0 - int(img_size[0] * (1 - limit))
     x_end = int(bg_size[0] - img_size[0] + (img_size[0] * (1 - limit)))
     y_start = 0 - int(img_size[1] * (1 - limit))
@@ -41,5 +39,5 @@ def random_placement(bg_size: Tuple[int, int],
         {
             "position_x": x,
             "position_y": y,
-        }
+        },
     )

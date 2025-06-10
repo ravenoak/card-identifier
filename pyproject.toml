@@ -18,6 +18,8 @@ requests = "^2.28.1"
 
 [tool.poetry.group.dev.dependencies]
 streamlit = "*"
+pytest = "^8.4.0"
+pytest-xdist = "^3.7.0"
 
 [tool.poetry.scripts]
 mkdataset = "card_identifier.cli.main:run"

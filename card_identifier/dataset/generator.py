@@ -53,14 +53,18 @@ def gen_random_dataset(
 
         resized_img, resize_meta = transformers.random_resize(xform_image)
         meta.update(resize_meta)
-        perspective_img, perspective_meta = transformers.random_perspective_transform(resized_img)
+        perspective_img, perspective_meta = transformers.random_perspective_transform(
+            resized_img
+        )
         meta.update(perspective_meta)
         rot_image, rot_meta = transformers.random_rotate(perspective_img)
         meta.update(rot_meta)
         bg_type = random.choice(background.BACKGROUND_TYPES)
         meta["bg_type"] = bg_type
         base_image = func_map[bg_type](DEFAULT_WORKING_SIZE, meta)
-        pos, pos_meta = background.random_placement(base_image.size, rot_image.size, 0.75)
+        pos, pos_meta = background.random_placement(
+            base_image.size, rot_image.size, 0.75
+        )
         meta.update(pos_meta)
         base_image.paste(rot_image, pos, rot_image.split()[3])
         base_image = base_image.convert(mode="RGB")
@@ -70,7 +74,10 @@ def gen_random_dataset(
             base_image.resize(DEFAULT_OUT_SIZE).save(out_file, DEFAULT_OUT_EXT)
         image_meta = ImageMeta(filename=filename, details=meta.copy())
         with open(save_path.joinpath(f"{image_hash}.json"), "w") as meta_file:
-            json.dump({"filename": image_meta.filename, "details": image_meta.details}, meta_file)
+            json.dump(
+                {"filename": image_meta.filename, "details": image_meta.details},
+                meta_file,
+            )
         metas.append(image_meta)
         logger.debug(f"Generated image with meta: {meta}")
     return metas
@@ -110,7 +117,9 @@ class DatasetBuilder:
                     save_path.mkdir(parents=True)
                     save_num = self.num_images
                 else:
-                    save_num = self.num_images - len(list(save_path.glob(f"*.{DEFAULT_OUT_EXT}")))
+                    save_num = self.num_images - len(
+                        list(save_path.glob(f"*.{DEFAULT_OUT_EXT}"))
+                    )
                     if save_num <= 0:
                         continue
                 logger.info(f"adding {card_id} to work, generating {save_num} images")

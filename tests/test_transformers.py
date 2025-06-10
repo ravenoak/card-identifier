@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import math
@@ -29,7 +30,9 @@ def test_random_resize_size_and_meta():
 
 def test_random_perspective_transform_size_and_meta():
     img = create_image()
-    transformed, meta = transformers.random_perspective_transform(img, wobble_percent=0.2)
+    transformed, meta = transformers.random_perspective_transform(
+        img, wobble_percent=0.2
+    )
     assert transformed.size == img.size
     assert meta["transformer"] == "perspective"
     assert meta["method"] == "PIL.Image.Image.transform"
