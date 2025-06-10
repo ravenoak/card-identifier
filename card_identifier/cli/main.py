@@ -3,6 +3,10 @@ import logging
 import click
 
 from card_identifier.util import setup_logging
+from .card_data import card_data
+from .create_dataset import create_dataset
+from .trim_dataset import trim_dataset
+from .random_state import save_random_state
 
 logger = logging.getLogger("card_identifier.cli")
 
@@ -15,11 +19,6 @@ def cli(ctx, debug):
     ctx.obj["DEBUG"] = debug
     setup_logging(debug)
 
-
-from .card_data import card_data
-from .create_dataset import create_dataset
-from .trim_dataset import trim_dataset
-from .random_state import save_random_state
 
 cli.add_command(card_data)
 cli.add_command(create_dataset)
