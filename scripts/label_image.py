@@ -21,6 +21,13 @@ import numpy as np
 from PIL import Image
 import tensorflow as tf
 
+try:
+    from tflite_runtime.interpreter import (
+        load_delegate as tflite_load_delegate,
+    )
+except ImportError:  # pragma: no cover - optional dependency not installed
+    tflite_load_delegate = tf.lite.experimental.load_delegate
+
 
 def load_labels(filename):
     with open(filename, "r") as f:
@@ -81,7 +88,7 @@ if __name__ == "__main__":
                 args.ext_delegate, ext_delegate_options
             )
         )
-        ext_delegate = [tflite.load_delegate(args.ext_delegate, ext_delegate_options)]
+        ext_delegate = [tflite_load_delegate(args.ext_delegate, ext_delegate_options)]
 
     interpreter = tf.lite.Interpreter(
         model_path=args.model_file,
