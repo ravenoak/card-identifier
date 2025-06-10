@@ -9,15 +9,17 @@ from skimage.util import random_noise
 
 def _find_coefficients(pa, pb):
     matrix = []
-    for p1, p2 in zip(pa, pb):
-        matrix.append([p1[0], p1[1], 1, 0, 0, 0, -p2[0] * p1[0], -p2[0] * p1[1]])
-        matrix.append([0, 0, 0, p1[0], p1[1], 1, -p2[1] * p1[0], -p2[1] * p1[1]])
+    b = []
+    for (x, y), (u, v) in zip(pa, pb):
+        matrix.append([x, y, 1, 0, 0, 0, -u * x, -u * y])
+        matrix.append([0, 0, 0, x, y, 1, -v * x, -v * y])
+        b.extend([u, v])
 
-    a = np.matrix(matrix, dtype=float)
-    b = np.array(pb).reshape(8)
+    a = np.array(matrix, dtype=float)
+    b = np.array(b, dtype=float)
 
-    res = np.dot(np.linalg.inv(a.T * a) * a.T, b)
-    return np.array(res).reshape(8)
+    coeffs, *_ = np.linalg.lstsq(a, b, rcond=None)
+    return coeffs.reshape(8)
 
 
 def _add_noise(image: Image.Image, **kwargs) -> Tuple[Image.Image, dict]:
@@ -31,16 +33,24 @@ def _add_noise(image: Image.Image, **kwargs) -> Tuple[Image.Image, dict]:
     return Image.fromarray(arr), meta
 
 
-def add_noise_salt_n_pepper(image: Image.Image, amount: float = 0.01) -> Tuple[Image.Image, dict]:
-    img, meta = _add_noise(image, mode='s&p', amount=amount)
+def add_noise_salt_n_pepper(
+    image: Image.Image, amount: float = 0.01
+) -> Tuple[Image.Image, dict]:
+    img, meta = _add_noise(image, mode="s&p", amount=amount)
     meta["mode"] = "s&p"
     meta["amount"] = amount
     return img, meta
 
 
-def random_resize(image: Image.Image, resize_percent: float = 0.3) -> Tuple[Image.Image, dict]:
-    resize = random.randint(int(100 - (resize_percent * 100)),
-                            int(100 + (resize_percent * 100))) / 100
+def random_resize(
+    image: Image.Image, resize_percent: float = 0.3
+) -> Tuple[Image.Image, dict]:
+    resize = (
+        random.randint(
+            int(100 - (resize_percent * 100)), int(100 + (resize_percent * 100))
+        )
+        / 100
+    )
     x = int(image.size[0] * resize)
     y = int(image.size[1] * resize)
     return (
@@ -49,13 +59,23 @@ def random_resize(image: Image.Image, resize_percent: float = 0.3) -> Tuple[Imag
             "transformer": "fuzzy_resize",
             "resize": resize,
             "method": "PIL.Image.Image.resize",
-        }
+        },
     )
 
 
-def random_perspective_transform(img: Image.Image, wobble_percent: float = 0.2) -> Tuple[Image.Image, dict]:
+def random_perspective_transform(
+    img: Image.Image, wobble_percent: float = 0.2
+) -> Tuple[Image.Image, dict]:
     def wobble(xy, size):
-        return xy + int((random.randint(int(0 - (wobble_percent * 100)), int(0 + (wobble_percent * 100))) / 100) * size)
+        return xy + int(
+            (
+                random.randint(
+                    int(0 - (wobble_percent * 100)), int(0 + (wobble_percent * 100))
+                )
+                / 100
+            )
+            * size
+        )
 
     w, h = img.size
     x0: int = wobble(0, w)
@@ -73,24 +93,31 @@ def random_perspective_transform(img: Image.Image, wobble_percent: float = 0.2) 
     # put image fully in frame
     adj_x = abs(min(x0, x1, x2, x3))
     adj_y = abs(min(y0, y1, y2, y3))
-    pa: list[tuple[int, int]] = [(x0 + adj_x, y0 + adj_y), (x1 + adj_x, y1 + adj_y), (x2 + adj_x, y2 + adj_y),
-                                 (x3 + adj_x, y3 + adj_y)]
+    pa: list[tuple[int, int]] = [
+        (x0 + adj_x, y0 + adj_y),
+        (x1 + adj_x, y1 + adj_y),
+        (x2 + adj_x, y2 + adj_y),
+        (x3 + adj_x, y3 + adj_y),
+    ]
     pb: list[tuple[int, int]] = [(0, 0), (w, 0), (w, h), (0, h)]
     coefficients = _find_coefficients(pa, pb)
     return (
         img.transform(
-            (int(img.size[0] * (1 + wobble_percent)), int(img.size[1] * (1 + wobble_percent))),
+            (
+                int(img.size[0] * (1 + wobble_percent)),
+                int(img.size[1] * (1 + wobble_percent)),
+            ),
             Image.PERSPECTIVE,
             data=coefficients,
             resample=Image.BICUBIC,
-            fill=0
+            fill=0,
         ).resize((w, h)),
         {
             "transformer": "perspective",
             "pa": pa,
             "coefficients": coefficients,
-            "method": "PIL.Image.Image.transform"
-        }
+            "method": "PIL.Image.Image.transform",
+        },
     )
 
 
@@ -126,8 +153,8 @@ def random_autocontrast(img: Image.Image) -> Tuple[Image.Image, dict]:
         {
             "transformer": "autocontrast",
             "cutoff": cutoff,
-            "method": "PIL.ImageOps.autocontrast"
-        }
+            "method": "PIL.ImageOps.autocontrast",
+        },
     )
 
 
@@ -135,11 +162,7 @@ def random_posterize(img: Image.Image) -> Tuple[Image.Image, dict]:
     bits = random.randint(1, 8)
     return (
         ImageOps.posterize(img, bits),
-        {
-            "transformer": "posterize",
-            "bits": bits,
-            "method": "PIL.ImageOps.posterize"
-        }
+        {"transformer": "posterize", "bits": bits, "method": "PIL.ImageOps.posterize"},
     )
 
 
@@ -150,8 +173,8 @@ def random_solarize(img: Image.Image) -> Tuple[Image.Image, dict]:
         {
             "transformer": "solarize",
             "threshold": threshold,
-            "method": "PIL.ImageOps.solarize"
-        }
+            "method": "PIL.ImageOps.solarize",
+        },
     )
 
 
