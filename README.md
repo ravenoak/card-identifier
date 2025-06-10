@@ -32,6 +32,7 @@ Several environment variables control where datasets and images are stored. They
 | `CARDIDENT_BACKGROUNDS_DIR` | Location of background images. | `$CARDIDENT_DATA_ROOT/backgrounds` |
 | `CARDIDENT_IMAGES_DIR` | Where original card images are downloaded. | `$CARDIDENT_DATA_ROOT/images/originals` |
 | `CARDIDENT_DATASETS_DIR` | Destination for generated dataset images. | `$CARDIDENT_DATA_ROOT/images/dataset` |
+| `CARDIDENT_DEBUG` | Enable debug logging across multiprocessing workers. | `0` |
 
 ## Usage
 
@@ -46,6 +47,11 @@ Generate a dataset of 500 images:
 ```bash
 poetry run mkdataset create-dataset -t pokemon -n 500
 ```
+
+## Debug Logging
+
+Set `CARDIDENT_DEBUG=1` to enable debug messages from all worker processes. The
+`--debug` flag in the CLI sets this variable automatically.
 
 ## Running Tests
 
