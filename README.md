@@ -14,4 +14,43 @@ This project uses [Poetry](https://python-poetry.org/) to manage dependencies an
 poetry install
 ```
 
-This will create an isolated virtual environment and install all runtime and development dependencies.
+This will create an isolated virtual environment and install all runtime and development dependencies. You can also install the package with `pip` for development:
+
+```bash
+pip install -e .
+```
+
+Either method will make the `mkdataset` command available in your environment.
+
+## Environment Variables
+
+Several environment variables control where datasets and images are stored. They all default to sub-directories of `data` if not set.
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CARDIDENT_DATA_ROOT` | Root directory for all data assets. | `data` |
+| `CARDIDENT_BACKGROUNDS_DIR` | Location of background images. | `$CARDIDENT_DATA_ROOT/backgrounds` |
+| `CARDIDENT_IMAGES_DIR` | Where original card images are downloaded. | `$CARDIDENT_DATA_ROOT/images/originals` |
+| `CARDIDENT_DATASETS_DIR` | Destination for generated dataset images. | `$CARDIDENT_DATA_ROOT/images/dataset` |
+
+## Usage
+
+First ensure card images are downloaded. For Pokémon cards this can be done with:
+
+```bash
+poetry run mkdataset card-data -t pokemon --images
+```
+
+Generate a dataset of 500 images:
+
+```bash
+poetry run mkdataset create-dataset -t pokemon -n 500
+```
+
+## Running Tests
+
+Execute the test suite before committing changes:
+
+```bash
+poetry run pytest -n auto
+```
