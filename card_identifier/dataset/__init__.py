@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import pickle
+import shutil
 from typing import Dict, Union
 
 from card_identifier.cards.pokemon import get_legal_sets
@@ -53,12 +54,56 @@ class DatasetManager:
         return card_dataset_map
 
     def mk_symlinks(self, training_type: str = "all"):
-        if training_type == "all":
-            logger.info("making symlinks for all cards")
-        elif training_type == "legal":
-            logger.info("making symlinks for legal cards")
-            _legal_sets = get_legal_sets()
-        elif training_type == "sets":
-            logger.info("making symlinks for cards in sets")
-        else:
+        """Create a symlink tree inside ``dataset_dir`` for training.
+
+        The generated directory structure is ``dataset_dir/symlinks/<mode>`` and
+        contains symlinks back to the real images organised by card id.  The
+        ``mode`` can be one of ``"all"`` (every card), ``"legal"`` (only cards
+        from legal sets) or ``"sets"`` (grouped by set then card).
+        """
+
+        if training_type not in {"all", "legal", "sets"}:
             raise ValueError(f"invalid training_type: {training_type}")
+
+        if training_type == "legal":
+            logger.info("making symlinks for legal cards")
+            allowed_sets = get_legal_sets()
+        else:
+            allowed_sets = None
+            if training_type == "all":
+                logger.info("making symlinks for all cards")
+            else:
+                logger.info("making symlinks for cards in sets")
+
+        base = self.dataset_dir.joinpath("symlinks", training_type)
+        if base.exists():
+            shutil.rmtree(base)
+        base.mkdir(parents=True, exist_ok=True)
+
+        for set_dir in self.dataset_dir.glob("*"):
+            if not set_dir.is_dir():
+                continue
+            set_id = set_dir.name
+            if allowed_sets is not None and set_id not in allowed_sets:
+                continue
+            for card_dir in set_dir.glob("*"):
+                if not card_dir.is_dir():
+                    logger.error(f"missing card directory: {card_dir}")
+                    continue
+                card_id = card_dir.name
+                if training_type == "sets":
+                    dest_dir = base.joinpath(set_id, card_id)
+                else:
+                    dest_dir = base.joinpath(card_id)
+                dest_dir.mkdir(parents=True, exist_ok=True)
+                for img in card_dir.glob(f"*.{self.out_ext}"):
+                    if not img.exists():
+                        logger.error(f"missing image file: {img}")
+                        continue
+                    link = dest_dir.joinpath(img.name)
+                    if link.exists() or link.is_symlink():
+                        link.unlink()
+                    try:
+                        link.symlink_to(img.resolve())
+                    except FileNotFoundError:
+                        logger.error(f"unable to symlink missing file: {img}")
