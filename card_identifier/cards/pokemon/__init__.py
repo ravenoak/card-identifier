@@ -16,18 +16,18 @@ logger = logging.getLogger("card_identifier.pokemon")
 
 
 def get_legal_sets():
-    return set(
-        (s.id for s in Set.where(q="legalities.standard:legal"))).union(
-        set((s.id for s in Set.where(q="legalities.expanded:legal"))))
+    return set((s.id for s in Set.where(q="legalities.standard:legal"))).union(
+        set((s.id for s in Set.where(q="legalities.expanded:legal")))
+    )
 
 
 class ImageManager:
     """Manages the original images for the Pokémon TCG"""
+
     def __init__(self):
         self.pickle_dir = get_pickle_dir("pokemon")
         self.image_dir = get_image_dir("pokemon")
-        self.card_image_file = self.pickle_dir.joinpath(
-            "card_image_map.pickle")
+        self.card_image_file = self.pickle_dir.joinpath("card_image_map.pickle")
         self.card_image_map = self.load_card_image_map()
 
     def scan_img_dir(self) -> Dict[str, str]:
@@ -78,8 +78,7 @@ class CardManager(BaseCardManager):
         self.api_client = api_client or PokemonTCGSDKClient()
         self.card_path = get_pickle_dir("pokemon").joinpath("cards.pickle")
         self.set_path = get_pickle_dir("pokemon").joinpath("sets.pickle")
-        self.set_card_path = get_pickle_dir("pokemon").joinpath(
-            "cards_by_set.pickle")
+        self.set_card_path = get_pickle_dir("pokemon").joinpath("cards_by_set.pickle")
         self.card_data = self.get_data("cards")
         self.set_data = self.get_data("sets")
         self.set_card_map = self.get_set_card_map()

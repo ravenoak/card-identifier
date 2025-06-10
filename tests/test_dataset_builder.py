@@ -11,6 +11,7 @@ from card_identifier.dataset import generator
 def test_dataset_builder_run(tmp_path, monkeypatch):
     monkeypatch.setenv("CARDIDENT_DATA_ROOT", str(tmp_path))
     from card_identifier.config import config
+
     config.data_root = Path(tmp_path)
     config.images_dir = config.data_root / "images" / "originals"
     config.datasets_dir = config.data_root / "images" / "dataset"
@@ -28,19 +29,33 @@ def test_dataset_builder_run(tmp_path, monkeypatch):
 
     with open(pickle_dir / "card_image_map.pickle", "wb") as fh:
         import pickle
+
         pickle.dump({"s1-c1": "s1-c1.png", "s2-c2": "s2-c2.png"}, fh)
 
-    monkeypatch.setattr(generator.background, "BACKGROUND_TYPES", ["random_solid_color"])
-    monkeypatch.setattr(generator, "func_map", {"random_solid_color": generator.background.random_solid_color})
-    monkeypatch.setattr(generator.transformers, "random_perspective_transform", lambda img, wobble_percent=0.2: (img, {}))
+    monkeypatch.setattr(
+        generator.background, "BACKGROUND_TYPES", ["random_solid_color"]
+    )
+    monkeypatch.setattr(
+        generator,
+        "func_map",
+        {"random_solid_color": generator.background.random_solid_color},
+    )
+    monkeypatch.setattr(
+        generator.transformers,
+        "random_perspective_transform",
+        lambda img, wobble_percent=0.2: (img, {}),
+    )
 
     class DummyPool:
         def __init__(self, processes=None):
             pass
+
         def __enter__(self):
             return self
+
         def __exit__(self, exc_type, exc, tb):
             pass
+
         def starmap(self, func, work):
             for args in work:
                 func(*args)
