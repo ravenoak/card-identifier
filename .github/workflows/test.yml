@@ -26,6 +26,6 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi
+        run: poetry install --no-interaction --no-ansi --with dev
       - name: Run pre-commit checks
         run: poetry run pre-commit run --all-files
