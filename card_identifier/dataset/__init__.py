@@ -30,8 +30,10 @@ class DatasetManager:
         self.dataset_dir = get_dataset_dir(namespace)
         self.card_dataset_map = self.load_card_dataset_map()
 
-    def load_card_dataset_map(self) -> Dict[str, pathlib.Path]:
-        """Loads the card_dataset_map pickle if it exists, otherwise returns an empty dict"""
+    def load_card_dataset_map(
+        self,
+    ) -> Dict[str, Dict[str, Union[int, list[pathlib.Path]]]]:
+        """Load ``card_dataset_map`` from disk or return an empty mapping."""
         if self.dataset_dir.joinpath(self.CARD_IMAGE_MAP).exists():
             with open(self.dataset_dir.joinpath(self.CARD_IMAGE_MAP), "rb") as file:
                 return pickle.load(file)
