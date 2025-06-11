@@ -179,6 +179,7 @@ def random_solarize(img: Image.Image) -> Tuple[Image.Image, dict]:
 
 def random_random_transformer(img: Image.Image) -> Tuple[Image.Image, dict]:
     xformers = [
+        random_add_noise,
         random_autocontrast,
         random_posterize,
         random_solarize,
