@@ -1,4 +1,5 @@
 from click.testing import CliRunner
+import pytest
 
 from card_identifier.cli.main import cli
 
@@ -136,3 +137,21 @@ def test_save_random_state_cli(tmp_path, monkeypatch):
     assert result.exit_code == 0, result.output
     assert seed["val"] == 42
     assert called["path"] == tmp_path / "barrel" / "pokemon"
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["create-dataset", "card-data", "trim-dataset", "save-random-state"],
+)
+def test_cli_unknown_card_type(command):
+    runner = CliRunner()
+    result = runner.invoke(cli, [command, "-t", "foo"], catch_exceptions=False)
+    assert result.exit_code == 2
+    assert "Invalid value for '-t' / '--card-type'" in result.output
+
+
+def test_cli_invalid_option():
+    runner = CliRunner()
+    result = runner.invoke(cli, ["create-dataset", "--bad"], catch_exceptions=False)
+    assert result.exit_code == 2
+    assert "No such option: --bad" in result.output
