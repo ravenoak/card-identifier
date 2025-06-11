@@ -74,3 +74,46 @@ def test_dataset_builder_run(tmp_path, monkeypatch):
         meta = json.loads(metas[0].read_text())
         assert meta["filename"] == images[0].name
         assert "details" in meta
+
+
+def test_dataset_builder_build_work(tmp_path, monkeypatch):
+    monkeypatch.setenv("CARDIDENT_DATA_ROOT", str(tmp_path))
+    from card_identifier.config import config
+
+    config.data_root = Path(tmp_path)
+    config.images_dir = config.data_root / "images" / "originals"
+    config.datasets_dir = config.data_root / "images" / "dataset"
+    config.backgrounds_dir = config.data_root / "backgrounds"
+
+    image_dir = config.images_dir / "pokemon"
+    pickle_dir = config.data_root / "barrel" / "pokemon"
+    dataset_root = config.datasets_dir / "pokemon"
+
+    image_dir.mkdir(parents=True)
+    pickle_dir.mkdir(parents=True)
+    dataset_root.mkdir(parents=True)
+
+    img1 = image_dir / "s1-c1.png"
+    img2 = image_dir / "s2-c2.png"
+    Image.new("RGB", (10, 10), color=(255, 0, 0)).save(img1)
+    Image.new("RGB", (10, 10), color=(0, 255, 0)).save(img2)
+
+    with open(pickle_dir / "card_image_map.pickle", "wb") as fh:
+        import pickle
+
+        pickle.dump({"s1-c1": "s1-c1.png", "s2-c2": "s2-c2.png"}, fh)
+
+    existing_dir = dataset_root / "s2" / "s2-c2"
+    existing_dir.mkdir(parents=True)
+    (existing_dir / f"old1.{generator.DEFAULT_OUT_EXT}").write_bytes(b"1")
+    (existing_dir / f"old2.{generator.DEFAULT_OUT_EXT}").write_bytes(b"2")
+
+    builder = generator.DatasetBuilder("pokemon", num_images=3, id_filter="s2")
+    work = builder.build_work()
+
+    assert len(work) == 1
+    original, save_path, save_num = work[0]
+    assert original == image_dir / "s2-c2.png"
+    assert save_path == existing_dir
+    assert save_num == 1
+    assert not (dataset_root / "s1" / "s1-c1").exists()
