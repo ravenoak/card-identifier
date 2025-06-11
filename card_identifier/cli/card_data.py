@@ -20,7 +20,15 @@ logger = logging.getLogger(__name__)
 )
 @click.pass_context
 def card_data(ctx, card_type, images, force, refresh):
-    """Manages the card data for the given card type."""
+    """Manage metadata and images for a particular card namespace.
+
+    Args:
+        ctx (click.Context): CLI context.
+        card_type (str): Namespace of cards to manage.
+        images (bool): Download card images if ``True``.
+        force (bool): Overwrite existing images when downloading.
+        refresh (bool): Refresh cached card metadata before processing.
+    """
     logging.info("card-data")
     if card_type == "pokemon":
         logger.info("working with Pokémon data!")
