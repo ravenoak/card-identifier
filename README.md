@@ -118,7 +118,15 @@ Set `CARDIDENT_DEBUG=1` to enable debug messages from all worker processes. The
 
 ## Running Tests
 
-Execute the test suite before committing changes:
+Install the development dependencies first:
+
+```bash
+pip install -e .[dev]
+# or
+poetry install --with dev
+```
+
+Then execute the test suite before committing changes:
 
 ```bash
 poetry run pytest -n auto
