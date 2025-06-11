@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 
 def _create_dataset(tmp_path: Path) -> Path:
     root = tmp_path / "images" / "dataset" / "pokemon"
@@ -63,3 +65,18 @@ def test_mk_symlinks_sets(tmp_path, monkeypatch):
     link = dataset_root / "symlinks" / "sets" / "s1" / "s1-c1" / "img1.png"
     assert link.is_symlink()
     assert link.resolve() == dataset_root / "s1" / "s1-c1" / "img1.png"
+
+
+def test_mk_symlinks_bad(tmp_path, monkeypatch):
+    monkeypatch.setenv("CARDIDENT_DATA_ROOT", str(tmp_path))
+    from card_identifier.config import config
+
+    config.data_root = Path(tmp_path)
+    config.images_dir = config.data_root / "images" / "originals"
+    config.datasets_dir = config.data_root / "images" / "dataset"
+    _create_dataset(tmp_path)
+    from card_identifier.dataset import DatasetManager
+
+    dm = DatasetManager("pokemon")
+    with pytest.raises(ValueError):
+        dm.mk_symlinks("bad")
