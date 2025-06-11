@@ -102,9 +102,15 @@ class DatasetBuilder:
         load_random_state(self.pickle_dir)
         work: list[tuple[pathlib.Path, pathlib.Path, int]] = []
 
-        with open(self.pickle_dir.joinpath("card_image_map.pickle"), "rb") as file:
-            logger.debug("opening card_image_map pickle")
-            id_image_map = pickle.load(file)
+        card_map = self.pickle_dir.joinpath("card_image_map.pickle")
+        try:
+            with open(card_map, "rb") as file:
+                logger.debug("opening card_image_map pickle")
+                id_image_map = pickle.load(file)
+        except FileNotFoundError as exc:
+            msg = f"card image map not found: {card_map}"
+            logger.error(msg)
+            raise FileNotFoundError(msg) from exc
 
         logger.info("creating work queue")
         for card_id, path in id_image_map.items():
