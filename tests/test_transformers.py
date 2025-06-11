@@ -81,3 +81,13 @@ def test_random_solarize_size_and_meta():
     assert meta["transformer"] == "solarize"
     assert 1 <= meta["threshold"] <= 128
     assert meta["method"] == "PIL.ImageOps.solarize"
+
+
+def test_random_add_noise_size_and_meta():
+    img = create_image()
+    out, meta = transformers.random_add_noise(img)
+    assert out.size == img.size
+    assert meta["transformer"] == "noise"
+    assert 0.001 <= meta["amount"] <= 0.01
+    assert meta["mode"] == "s&p"
+    assert meta["method"] == "skimage.util.random_noise"
