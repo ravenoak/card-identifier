@@ -23,6 +23,15 @@ pytest-xdist = "^3.7.0"
 ruff = "^0.4.3"
 pre-commit = "^3.7.0"
 
+[tool.poetry.extras]
+dev = [
+    "streamlit",
+    "pytest",
+    "pytest-xdist",
+    "ruff",
+    "pre-commit",
+]
+
 [tool.poetry.scripts]
 mkdataset = "card_identifier.cli.main:run"
 
