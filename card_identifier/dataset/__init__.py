@@ -29,7 +29,6 @@ class DatasetManager:
         self.image_dir = get_image_dir(namespace)
         self.dataset_dir = get_dataset_dir(namespace)
         self.card_dataset_map = self.load_card_dataset_map()
-        self.num_img_desired = 100
 
     def load_card_dataset_map(self) -> Dict[str, pathlib.Path]:
         """Loads the card_dataset_map pickle if it exists, otherwise returns an empty dict"""
