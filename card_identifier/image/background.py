@@ -37,10 +37,11 @@ def random_bg_image(size: tuple[int, int], meta) -> Image.Image:
             f"no background images found in {config.backgrounds_dir}"
         )
 
-    bg_image = Image.open(random.choice(images))
-    meta["bg_image"] = bg_image.filename
-    img = Image.new("RGBA", size)
-    img.paste(bg_image.resize(size), (0, 0))
+    path = random.choice(images)
+    with Image.open(path) as bg_image:
+        meta["bg_image"] = bg_image.filename
+        img = Image.new("RGBA", size)
+        img.paste(bg_image.resize(size), (0, 0))
     return img
 
 
