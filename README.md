@@ -24,7 +24,7 @@ pre-commit install
 This will create an isolated virtual environment and install all runtime and development dependencies. You can also install the package with `pip` if you prefer not to use Poetry:
 
 ```bash
-pip install -e .[dev]
+pip install -e '.[dev]'
 ```
 
 Either method will make the `mkdataset` command available in your environment.
