@@ -14,6 +14,13 @@ This project uses [Poetry](https://python-poetry.org/) to manage dependencies an
 poetry install
 ```
 
+After installing dependencies, enable git hooks so style checks and tests run
+automatically before each commit:
+
+```bash
+pre-commit install
+```
+
 This will create an isolated virtual environment and install all runtime and development dependencies. You can also install the package with `pip` for development:
 
 ```bash
@@ -59,6 +66,12 @@ Execute the test suite before committing changes:
 
 ```bash
 poetry run pytest -n auto
+```
+
+You can also run all style checks and tests at once with:
+
+```bash
+pre-commit run --all-files
 ```
 
 ## Linting

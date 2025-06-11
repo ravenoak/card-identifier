@@ -21,6 +21,7 @@ streamlit = "*"
 pytest = "^8.4.0"
 pytest-xdist = "^3.7.0"
 ruff = "^0.4.3"
+pre-commit = "^3.7.0"
 
 [tool.poetry.scripts]
 mkdataset = "card_identifier.cli.main:run"
