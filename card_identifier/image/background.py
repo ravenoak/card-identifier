@@ -18,7 +18,26 @@ def random_solid_color(size: tuple[int, int], meta) -> Image.Image:
 
 
 def random_bg_image(size: tuple[int, int], meta) -> Image.Image:
-    bg_image = Image.open(random.choice([i for i in config.backgrounds_dir.glob("*")]))
+    """Return a random background image resized to ``size``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If ``config.backgrounds_dir`` does not exist or contains no images.
+    """
+
+    if not config.backgrounds_dir.exists():
+        raise FileNotFoundError(
+            f"backgrounds directory does not exist: {config.backgrounds_dir}"
+        )
+
+    images = [p for p in config.backgrounds_dir.glob("*") if p.is_file()]
+    if not images:
+        raise FileNotFoundError(
+            f"no background images found in {config.backgrounds_dir}"
+        )
+
+    bg_image = Image.open(random.choice(images))
     meta["bg_image"] = bg_image.filename
     img = Image.new("RGBA", size)
     img.paste(bg_image.resize(size), (0, 0))
