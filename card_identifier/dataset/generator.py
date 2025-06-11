@@ -40,8 +40,8 @@ def gen_random_dataset(
     if not save_path.exists():
         raise ValueError(f"Save path does not exist: {save_path}")
     logger.info(f"Generating {dataset_size} images from {image_path}")
-    src_image = Image.open(image_path)
-    src_image = src_image.convert(mode="RGBA")
+    with Image.open(image_path) as img:
+        src_image = img.convert(mode="RGBA")
     metas: List[ImageMeta] = []
     for iteration in range(0, dataset_size):
         logger.debug(f"Generating image {image_path} {iteration} of {dataset_size}")
