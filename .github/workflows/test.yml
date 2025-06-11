@@ -26,8 +26,6 @@ jobs:
       - name: Install Poetry
         run: pip install poetry
       - name: Install dependencies
-        run: poetry install --no-interaction --no-ansi
-      - name: Run Ruff
-        run: poetry run ruff check .
-      - name: Run tests
-        run: poetry run pytest -q
+        run: poetry install --no-interaction --no-ansi --with dev
+      - name: Run pre-commit checks
+        run: poetry run pre-commit run --all-files
