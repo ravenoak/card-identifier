@@ -20,7 +20,13 @@ logger = logging.getLogger(__name__)
 )
 @click.pass_context
 def trim_dataset(ctx, card_type, number_of_images):
-    """Trims the dataset to the given number of images per card."""
+    """Remove excess images from a dataset directory.
+
+    Args:
+        ctx (click.Context): CLI context.
+        card_type (str): Namespace of cards to trim.
+        number_of_images (int): Maximum images to keep per card.
+    """
     pickle_dir = get_pickle_dir(card_type)
     dataset_dir = get_dataset_dir(card_type)
     load_random_state(pickle_dir)
