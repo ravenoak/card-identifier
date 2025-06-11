@@ -1,7 +1,9 @@
 import logging
 
-from . import background
-from . import transformers  # noqa: F401
+from . import (
+    background,
+    transformers,  # noqa: F401
+)
 from .meta import ImageMeta
 
 func_map = {

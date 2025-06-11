@@ -1,7 +1,5 @@
 from pathlib import Path
 
-import pytest
-
 
 def _create_dataset(tmp_path: Path) -> Path:
     root = tmp_path / "images" / "dataset" / "pokemon"

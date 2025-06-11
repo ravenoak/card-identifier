@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 import pytest
 
@@ -27,8 +26,9 @@ def test_gen_random_dataset_invalid_save_path(tmp_path):
 
 
 def test_gen_random_dataset_no_fd_leak(tmp_path, monkeypatch):
-    from PIL import Image
     import os
+
+    from PIL import Image
 
     image_path = tmp_path / "img.png"
     Image.new("RGB", (10, 10), color=(255, 0, 0)).save(image_path)

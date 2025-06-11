@@ -1,7 +1,4 @@
-from pathlib import Path
-
 from card_identifier.dataset import DatasetManager
-
 from tests.test_dataset_symlinks import _create_dataset
 
 

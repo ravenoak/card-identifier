@@ -3,7 +3,7 @@ import random
 
 import click
 
-from card_identifier.data import get_dataset_dir, get_pickle_dir, NAMESPACES
+from card_identifier.data import NAMESPACES, get_dataset_dir, get_pickle_dir
 from card_identifier.dataset.generator import DEFAULT_OUT_EXT
 from card_identifier.storage import load_random_state
 

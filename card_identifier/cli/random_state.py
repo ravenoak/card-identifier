@@ -3,7 +3,7 @@ import random
 
 import click
 
-from card_identifier.data import get_pickle_dir, NAMESPACES
+from card_identifier.data import NAMESPACES, get_pickle_dir
 from card_identifier.storage import save_random_state as save_state
 
 logger = logging.getLogger(__name__)

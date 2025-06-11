@@ -1,8 +1,6 @@
 import json
 from pathlib import Path
 
-import pytest
-
 from PIL import Image
 
 from card_identifier.dataset import generator
