@@ -19,13 +19,27 @@ logger = logging.getLogger(__name__)
     default="pokemon",
 )
 @click.pass_context
-def trim_dataset(ctx, card_type, number_of_images):
+def trim_dataset(ctx: click.Context, card_type: str, number_of_images: int) -> None:
     """Remove excess images from a dataset directory.
 
-    Args:
-        ctx (click.Context): CLI context.
-        card_type (str): Namespace of cards to trim.
-        number_of_images (int): Maximum images to keep per card.
+    Parameters
+    ----------
+    ctx:
+        ``click`` context object.
+    card_type:
+        Namespace of cards to trim.
+    number_of_images:
+        Maximum number of images to keep per card.
+
+    Returns
+    -------
+    None
+        Excess images are removed from the dataset directory as a side effect.
+
+    Side Effects
+    ------------
+    Deletes files from the dataset directory after loading the persisted
+    random state to ensure deterministic trimming.
     """
     pickle_dir = get_pickle_dir(card_type)
     dataset_dir = get_dataset_dir(card_type)
