@@ -60,3 +60,11 @@ Execute the test suite before committing changes:
 ```bash
 poetry run pytest -n auto
 ```
+
+## Linting
+
+Run Ruff to check code style and common errors:
+
+```bash
+poetry run ruff check .
+```
