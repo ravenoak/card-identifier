@@ -1,5 +1,6 @@
 import logging
 import pathlib
+from functools import lru_cache
 from typing import Dict, List, Optional
 
 from pokemontcgsdk import Card, Set
@@ -14,7 +15,10 @@ from .api_client import CardAPIClient, PokemonTCGSDKClient
 logger = logging.getLogger("card_identifier.pokemon")
 
 
+@lru_cache(maxsize=1)
 def get_legal_sets():
+    """Return the set IDs that are legal in Standard or Expanded play."""
+
     return set((s.id for s in Set.where(q="legalities.standard:legal"))).union(
         set((s.id for s in Set.where(q="legalities.expanded:legal")))
     )
