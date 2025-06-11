@@ -4,9 +4,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import math
-from PIL import Image
-from card_identifier.image import transformers
 
+from PIL import Image
+
+from card_identifier.image import transformers
 
 IMAGE_SIZE = (100, 50)
 

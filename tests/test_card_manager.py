@@ -1,7 +1,5 @@
 from types import SimpleNamespace
 
-import pytest
-
 from card_identifier.cards import pokemon
 
 

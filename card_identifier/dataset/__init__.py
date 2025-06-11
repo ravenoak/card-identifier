@@ -5,11 +5,12 @@ import shutil
 from typing import Dict, Union
 
 from card_identifier.cards.pokemon import get_legal_sets
-from card_identifier.data import get_image_dir, get_dataset_dir
+from card_identifier.data import get_dataset_dir, get_image_dir
+
 from .generator import (
-    DEFAULT_WORKING_SIZE,
-    DEFAULT_OUT_SIZE,
     DEFAULT_OUT_EXT,
+    DEFAULT_OUT_SIZE,
+    DEFAULT_WORKING_SIZE,
 )
 
 logger = logging.getLogger("card_identifier.dataset")

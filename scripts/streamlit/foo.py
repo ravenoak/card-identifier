@@ -2,7 +2,6 @@ import streamlit as st
 
 from card_identifier import pokemon
 
-
 st.title("Card Identifier")
 collection_type = st.sidebar.selectbox("Collection Type", ["Pokemon"])
 

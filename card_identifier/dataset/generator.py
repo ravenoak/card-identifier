@@ -1,20 +1,19 @@
 import hashlib
+import json
 import logging
+import multiprocessing as mp
 import os
 import pathlib
+import pickle
 import random
-import json
-from typing import Tuple, List
+from typing import List, Tuple
 
 from PIL import Image
 
-import multiprocessing as mp
-import pickle
-
-from card_identifier.image import transformers, background, func_map, ImageMeta
 from card_identifier.data import get_dataset_dir, get_image_dir, get_pickle_dir
-from card_identifier.util import setup_logging
+from card_identifier.image import ImageMeta, background, func_map, transformers
 from card_identifier.storage import load_random_state
+from card_identifier.util import setup_logging
 
 DEFAULT_WORKING_SIZE: Tuple[int, int] = (1024, 1024)
 DEFAULT_OUT_SIZE: Tuple[int, int] = (224, 224)

@@ -18,8 +18,8 @@ import argparse
 import time
 
 import numpy as np
-from PIL import Image
 import tensorflow as tf
+from PIL import Image
 
 try:
     from tflite_runtime.interpreter import (
