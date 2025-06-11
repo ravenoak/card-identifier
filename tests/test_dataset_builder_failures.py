@@ -4,7 +4,6 @@ from pathlib import Path
 
 from card_identifier.dataset import generator
 
-
 # Test when referenced images are missing
 
 
