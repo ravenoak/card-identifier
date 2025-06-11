@@ -15,6 +15,7 @@ def test_random_bg_image_missing_dir(tmp_path):
 def test_random_bg_image_no_fd_leak(tmp_path):
     """random_bg_image should not leak file descriptors."""
     import os
+
     from PIL import Image
 
     config.backgrounds_dir = tmp_path
