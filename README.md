@@ -55,6 +55,58 @@ Generate a dataset of 500 images:
 poetry run mkdataset create-dataset -t pokemon -n 500
 ```
 
+## Dataset Organization and Workflow
+
+All data lives beneath `CARDIDENT_DATA_ROOT` (defaults to `data`).
+Important subdirectories are:
+
+```
+$CARDIDENT_DATA_ROOT/
+  backgrounds/           # background images used for dataset generation
+  barrel/<game>/         # pickled state files and RNG snapshots
+  images/
+    originals/<game>/    # downloaded card scans
+    dataset/<game>/      # generated dataset images
+```
+
+Generated datasets are stored by set and card ID. For example:
+
+```
+$CARDIDENT_DATA_ROOT/images/dataset/pokemon/<set>/<card-id>/*.png
+```
+
+Training symlinks produced by `DatasetManager.mk_symlinks` are placed in
+`dataset/<game>/symlinks/<mode>` where `<mode>` is `all`, `legal`, or `sets`.
+
+A typical workflow is:
+
+1. Download card metadata and images:
+
+   ```bash
+   poetry run mkdataset card-data -t pokemon --refresh --images
+   ```
+
+2. Generate randomized dataset images (populate
+   `CARDIDENT_BACKGROUNDS_DIR` with background images first):
+
+   ```bash
+   poetry run mkdataset create-dataset -t pokemon -n 500
+   ```
+
+3. Trim each card directory to the desired size:
+
+   ```bash
+   poetry run mkdataset trim-dataset -t pokemon -n 200
+   ```
+
+4. Create symlink trees for training:
+
+   ```python
+   from card_identifier.dataset import DatasetManager
+   dm = DatasetManager("pokemon")
+   dm.mk_symlinks("all")  # or 'legal'/'sets'
+   ```
+
 ## Debug Logging
 
 Set `CARDIDENT_DEBUG=1` to enable debug messages from all worker processes. The
