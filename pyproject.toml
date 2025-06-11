@@ -20,6 +20,7 @@ requests = "^2.28.1"
 streamlit = "*"
 pytest = "^8.4.0"
 pytest-xdist = "^3.7.0"
+ruff = "^0.4.3"
 
 [tool.poetry.scripts]
 mkdataset = "card_identifier.cli.main:run"
@@ -27,3 +28,8 @@ mkdataset = "card_identifier.cli.main:run"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+extend-select = ["I"]
