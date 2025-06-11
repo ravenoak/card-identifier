@@ -1,0 +1,42 @@
+@startuml
+!define RECTANGLE class
+
+RECTANGLE "Configuration Management" as CM {
+    pydantic-settings
+}
+
+RECTANGLE "CLI Interface" as CLI {
+    Click
+}
+
+RECTANGLE "Command Execution" as CE {
+    Coordinates commands
+}
+
+RECTANGLE "Image Transformation Pipeline" as ITP {
+    Pillow, scikit-image, numpy
+}
+
+RECTANGLE "Metadata Management" as MM {
+    jsonlines
+}
+
+RECTANGLE "Storage Management" as SM {
+    Local filesystem
+}
+
+RECTANGLE "Logging & Error Handling" as LEH {
+    Python logging library
+}
+
+CM --> CLI : Provides settings
+CLI --> CE : Passes commands
+CE --> ITP : Directs transformation
+ITP --> MM : Emits metadata
+ITP --> SM : Stores processed images
+MM --> SM : Stores metadata
+ITP --> LEH : Logs activities
+CLI --> LEH : Logs activities
+CE --> LEH : Logs activities
+
+@enduml

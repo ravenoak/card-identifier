@@ -1,4 +1,3 @@
-from collections.abc import dict_keys
 from typing import Tuple, Type
 
 from pydantic import BaseModel, model_validator, ValidationError
@@ -10,7 +9,7 @@ driver_map = {
 }
 
 
-def get_available_drivers() -> dict_keys[str, tuple[Type[FileSystemConfig], Type[FileSystemDriver]]]:
+def get_available_drivers():
     return driver_map.keys()
 
 
