@@ -21,10 +21,10 @@ automatically before each commit:
 pre-commit install
 ```
 
-This will create an isolated virtual environment and install all runtime and development dependencies. You can also install the package with `pip` for development:
+This will create an isolated virtual environment and install all runtime and development dependencies. You can also install the package with `pip` if you prefer not to use Poetry:
 
 ```bash
-pip install -e .
+pip install -e .[dev]
 ```
 
 Either method will make the `mkdataset` command available in your environment.
@@ -67,6 +67,9 @@ Execute the test suite before committing changes:
 ```bash
 poetry run pytest -n auto
 ```
+
+The test suite depends on additional packages like `pytest-xdist`, `Pillow`, and
+`pokemontcgsdk`. These are included when installing with the `[dev]` extras.
 
 You can also run all style checks and tests at once with:
 
