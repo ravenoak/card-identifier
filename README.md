@@ -21,13 +21,17 @@ automatically before each commit:
 pre-commit install
 ```
 
-This will create an isolated virtual environment and install all runtime and development dependencies. You can also install the package with `pip` if you prefer not to use Poetry:
+This will create an isolated virtual environment and install all runtime and
+development dependencies. If you prefer not to use Poetry, install the package
+with `pip` and include the `[dev]` extras:
 
 ```bash
-pip install -e '.[dev]'
+pip install ".[dev]"
 ```
 
-Either method will make the `mkdataset` command available in your environment.
+Using `[dev]` installs `pytest`, `ruff`, `pre-commit`, and other development
+tools. Either method will make the `mkdataset` command available in your
+environment.
 
 ## Environment Variables
 
