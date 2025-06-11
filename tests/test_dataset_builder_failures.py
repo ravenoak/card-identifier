@@ -2,6 +2,8 @@ import logging
 import pickle
 from pathlib import Path
 
+import pytest
+
 from card_identifier.dataset import generator
 
 # Test when referenced images are missing
@@ -63,3 +65,19 @@ def test_run_no_work_logs_warning(tmp_path, monkeypatch, caplog):
     builder.run()
 
     assert any("no work items generated" in record.message for record in caplog.records)
+
+
+def test_build_work_missing_card_map(tmp_path, monkeypatch):
+    monkeypatch.setenv("CARDIDENT_DATA_ROOT", str(tmp_path))
+    from card_identifier.config import config
+
+    config.data_root = Path(tmp_path)
+    config.images_dir = config.data_root / "images" / "originals"
+    config.datasets_dir = config.data_root / "images" / "dataset"
+    config.backgrounds_dir = config.data_root / "backgrounds"
+
+    # Directories are created by DatasetBuilder
+    builder = generator.DatasetBuilder("pokemon", num_images=1)
+
+    with pytest.raises(FileNotFoundError, match="card image map not found"):
+        builder.build_work()
