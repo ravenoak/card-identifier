@@ -6,7 +6,7 @@ import os
 import pathlib
 import pickle
 import random
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 from PIL import Image
 
@@ -27,10 +27,11 @@ def gen_random_dataset(
     save_path: pathlib.Path,
     dataset_size: int,
     xform: bool = False,
-) -> List[ImageMeta]:
+) -> Optional[List[ImageMeta]]:
     """Generate a random dataset of the given size from the given image.
 
-    Returns a list of :class:`ImageMeta` describing each generated image.
+    Returns a list of :class:`ImageMeta` describing each generated image.  If
+    ``image_path`` is missing, ``None`` is returned.
     """
     debug = os.getenv("CARDIDENT_DEBUG", "0") == "1"
     setup_logging(debug)
