@@ -18,13 +18,27 @@ logger = logging.getLogger(__name__)
     default="pokemon",
 )
 @click.pass_context
-def save_random_state(ctx, card_type, seed):
+def save_random_state(ctx: click.Context, card_type: str, seed: int | None) -> None:
     """Persist Python's RNG state for reproducible dataset generation.
 
-    Args:
-        ctx (click.Context): CLI context.
-        card_type (str): Namespace of cards associated with the state.
-        seed (int | None): Seed to initialize ``random`` before saving.
+    Parameters
+    ----------
+    ctx:
+        ``click`` context object.
+    card_type:
+        Namespace of cards associated with the saved state.
+    seed:
+        Seed used to initialize :mod:`random` before persisting the state.  If
+        ``None`` a random seed is chosen.
+
+    Returns
+    -------
+    None
+        The RNG state is written to ``pickle_dir/random_state.pkl``.
+
+    Side Effects
+    ------------
+    Sets the global ``random`` module state and writes it to disk.
     """
     pickle_dir = get_pickle_dir(card_type)
     if seed is not None:

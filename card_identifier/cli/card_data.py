@@ -19,15 +19,28 @@ logger = logging.getLogger(__name__)
     default="pokemon",
 )
 @click.pass_context
-def card_data(ctx, card_type, images, force, refresh):
+def card_data(
+    ctx: click.Context, card_type: str, images: bool, force: bool, refresh: bool
+) -> None:
     """Manage metadata and images for a particular card namespace.
 
-    Args:
-        ctx (click.Context): CLI context.
-        card_type (str): Namespace of cards to manage.
-        images (bool): Download card images if ``True``.
-        force (bool): Overwrite existing images when downloading.
-        refresh (bool): Refresh cached card metadata before processing.
+    Parameters
+    ----------
+    ctx:
+        ``click`` context object.
+    card_type:
+        Namespace of cards to manage.
+    images:
+        Download card images when ``True``.
+    force:
+        Overwrite any existing image files when downloading.
+    refresh:
+        Refresh cached card metadata before processing.
+
+    Returns
+    -------
+    None
+        Card metadata and images are written to disk as a side effect.
     """
     logging.info("card-data")
     if card_type == "pokemon":
