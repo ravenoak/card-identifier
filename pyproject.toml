@@ -1,48 +1,60 @@
-[tool.poetry]
+[project]
 name = "collectable-card-identifier"
 version = "0.1.0"
-description = ""
-authors = ["Caitlyn O'Hanna <caitlyn.ohanna@gmail.com>"]
+description = "Dataset generator for training collectable card image classifiers."
 readme = "README.md"
-packages = [{include = "card_identifier"}]
-
-[tool.poetry.dependencies]
-python = "^3.10"
-click = "^8.1.3"
-Pillow = "^9.2.0"
-pokemontcgsdk = "^3.4.0"
-numpy = "^1.23.2"
-scikit-image = "^0.19.3"
-retrying = "^1.3.3"
-requests = "^2.28.1"
-
-[tool.poetry.group.dev.dependencies]
-streamlit = "*"
-pytest = "^8.4.0"
-pytest-xdist = "^3.7.0"
-ruff = "^0.4.3"
-pre-commit = "^3.7.0"
-
-[tool.poetry.extras]
-dev = [
-    "streamlit",
-    "pytest",
-    "pytest-xdist",
-    "ruff",
-    "pre-commit",
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+authors = [{ name = "Caitlyn O'Hanna", email = "caitlyn.ohanna@gmail.com" }]
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.5.0",
+    "numpy>=2.5.3",
+    "pillow>=12.3.0",
+    "pokemontcgsdk>=3.4.0",
+    "requests>=2.34.2",
+    "scikit-image>=0.26.0",
 ]
 
-[tool.poetry.scripts]
+[project.scripts]
 mkdataset = "card_identifier.cli.main:run"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.13.0,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "card_identifier"
+module-root = ""
 
 [tool.ruff]
-target-version = "py310"
-line-length = 88
-exclude = ["notebooks/*"]
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
-extend-select = ["I"]
+extend-select = ["W", "I", "UP", "B", "SIM", "C4", "PIE", "RET", "PT", "RUF", "LOG", "G"]
+
+[tool.pytest]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = ["-ra"]
+strict = true
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+include = ["card_identifier", "tests", "scripts"]
+exclude = ["scripts/label_image.py", "scripts/streamlit"]
+
+[dependency-groups]
+dev = [
+    "prek>=0.5.5",
+    "pyright[nodejs]>=1.1.414",
+    "pytest>=9.1.1",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.17.0",
+]
+streamlit = [
+    "streamlit>=1.65.0",
+]

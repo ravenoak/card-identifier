@@ -6,7 +6,7 @@ import os
 import pathlib
 import pickle
 import random
-from typing import List, Optional, Tuple
+from typing import Any
 
 from PIL import Image
 
@@ -15,8 +15,8 @@ from card_identifier.image import ImageMeta, background, func_map, transformers
 from card_identifier.storage import load_random_state
 from card_identifier.util import setup_logging
 
-DEFAULT_WORKING_SIZE: Tuple[int, int] = (1024, 1024)
-DEFAULT_OUT_SIZE: Tuple[int, int] = (224, 224)
+DEFAULT_WORKING_SIZE: tuple[int, int] = (1024, 1024)
+DEFAULT_OUT_SIZE: tuple[int, int] = (224, 224)
 DEFAULT_OUT_EXT = "png"
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ def gen_random_dataset(
     save_path: pathlib.Path,
     dataset_size: int,
     xform: bool = False,
-) -> Optional[List[ImageMeta]]:
+) -> list[ImageMeta] | None:
     """Generate a random dataset of the given size from the given image.
 
     Returns a list of :class:`ImageMeta` describing each generated image.  If
@@ -36,17 +36,19 @@ def gen_random_dataset(
     debug = os.getenv("CARDIDENT_DEBUG", "0") == "1"
     setup_logging(debug)
     if not image_path.exists() or not image_path.is_file():
-        logger.error(f"Image path does not exist or is not a file: {image_path}")
-        return
+        logger.error("Image path does not exist or is not a file: %s", image_path)
+        return None
     if not save_path.exists():
         raise ValueError(f"Save path does not exist: {save_path}")
-    logger.info(f"Generating {dataset_size} images from {image_path}")
+    logger.info("Generating %s images from %s", dataset_size, image_path)
     with Image.open(image_path) as img:
         src_image = img.convert(mode="RGBA")
-    metas: List[ImageMeta] = []
-    for iteration in range(0, dataset_size):
-        logger.debug(f"Generating image {image_path} {iteration} of {dataset_size}")
-        meta = {"transform": xform}
+    metas: list[ImageMeta] = []
+    for iteration in range(dataset_size):
+        logger.debug(
+            "Generating image %s %s of %s", image_path, iteration, dataset_size
+        )
+        meta: dict[str, Any] = {"transform": xform}
         if xform and random.random() < 0.5:
             xform_image, xform_meta = transformers.random_random_transformer(src_image)
             meta.update(xform_meta)
@@ -81,7 +83,7 @@ def gen_random_dataset(
                 meta_file,
             )
         metas.append(image_meta)
-        logger.debug(f"Generated image with meta: {meta}")
+        logger.debug("Generated image with meta: %s", meta)
     return metas
 
 
@@ -116,7 +118,7 @@ class DatasetBuilder:
         for card_id, path in id_image_map.items():
             original_path = self.image_dir.joinpath(path)
             if not original_path.exists():
-                logger.error(f"image {path} does not exist")
+                logger.error("image %s does not exist", path)
                 continue
             if self.id_filter is None or card_id.startswith(self.id_filter):
                 set_id = card_id.split("-")[0]
@@ -130,7 +132,9 @@ class DatasetBuilder:
                     )
                     if save_num <= 0:
                         continue
-                logger.info(f"adding {card_id} to work, generating {save_num} images")
+                logger.info(
+                    "adding %s to work, generating %s images", card_id, save_num
+                )
                 work.append((original_path, save_path, save_num))
 
         return work

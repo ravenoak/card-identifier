@@ -1,12 +1,11 @@
 import abc
-from typing import Dict
 
 
 class BaseCardManager(abc.ABC):
     """Abstract base class for TCG card managers."""
 
     @abc.abstractmethod
-    def get_data(self, data_item: str, overwrite: bool = False) -> Dict:
+    def get_data(self, data_item: str, overwrite: bool = False) -> dict:
         """Return card or set data for *data_item*.
 
         Implementations should fetch the requested data from local
@@ -15,7 +14,7 @@ class BaseCardManager(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_set_card_map(self, overwrite: bool = False) -> Dict:
+    def get_set_card_map(self, overwrite: bool = False) -> dict:
         """Return a mapping of set ids to card ids."""
 
     @abc.abstractmethod

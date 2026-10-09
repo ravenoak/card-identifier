@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2018 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,8 +31,8 @@ except ImportError:  # pragma: no cover - optional dependency not installed
 
 
 def load_labels(filename):
-    with open(filename, "r") as f:
-        return [line.strip() for line in f.readlines()]
+    with open(filename) as f:
+        return [line.strip() for line in f]
 
 
 if __name__ == "__main__":
@@ -84,9 +85,7 @@ if __name__ == "__main__":
     # load external delegate
     if args.ext_delegate is not None:
         print(
-            "Loading external delegate from {} with args: {}".format(
-                args.ext_delegate, ext_delegate_options
-            )
+            f"Loading external delegate from {args.ext_delegate} with args: {ext_delegate_options}"
         )
         ext_delegate = [tflite_load_delegate(args.ext_delegate, ext_delegate_options)]
 
@@ -127,8 +126,8 @@ if __name__ == "__main__":
     labels = load_labels(args.label_file)
     for i in top_k:
         if floating_model:
-            print("{:08.6f}: {}".format(float(results[i]), labels[i]))
+            print(f"{float(results[i]):08.6f}: {labels[i]}")
         else:
-            print("{:08.6f}: {}".format(float(results[i] / 255.0), labels[i]))
+            print(f"{float(results[i] / 255.0):08.6f}: {labels[i]}")
 
-    print("time: {:.3f}ms".format((stop_time - start_time) * 1000))
+    print(f"time: {(stop_time - start_time) * 1000:.3f}ms")

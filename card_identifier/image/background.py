@@ -1,5 +1,4 @@
 import random
-from typing import Tuple
 
 from PIL import Image
 
@@ -46,8 +45,8 @@ def random_bg_image(size: tuple[int, int], meta) -> Image.Image:
 
 
 def random_placement(
-    bg_size: Tuple[int, int], img_size: Tuple[int, int], limit: float
-) -> (Tuple[int, int], dict):
+    bg_size: tuple[int, int], img_size: tuple[int, int], limit: float
+) -> tuple[tuple[int, int], dict]:
     x_start = 0 - int(img_size[0] * (1 - limit))
     x_end = int(bg_size[0] - img_size[0] + (img_size[0] * (1 - limit)))
     y_start = 0 - int(img_size[1] * (1 - limit))

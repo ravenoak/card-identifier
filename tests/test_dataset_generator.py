@@ -21,7 +21,7 @@ def test_gen_random_dataset_invalid_save_path(tmp_path):
     image = tmp_path / "img.png"
     image.write_bytes(b"fake")
     save_path = tmp_path / "no_dir" / "sub"
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Save path does not exist"):
         generator.gen_random_dataset(image, save_path, 1)
 
 
@@ -52,10 +52,11 @@ def test_gen_random_dataset_no_fd_leak(tmp_path, monkeypatch):
         lambda img, wobble_percent=0.2: (img, {}),
     )
 
-    before = len(os.listdir("/proc/self/fd"))
+    before = len(os.listdir("/dev/fd"))
     result = generator.gen_random_dataset(image_path, save_path, 3)
-    after = len(os.listdir("/proc/self/fd"))
+    after = len(os.listdir("/dev/fd"))
 
+    assert result is not None
     assert len(result) == 3
     assert before == after
 
@@ -93,6 +94,7 @@ def test_gen_random_dataset_with_transform_meta(tmp_path, monkeypatch):
 
     metas = generator.gen_random_dataset(image_path, save_path, 1, xform=True)
 
+    assert metas is not None
     assert len(metas) == 1
     meta = metas[0].details
     assert meta["transform"] is True

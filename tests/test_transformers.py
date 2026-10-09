@@ -37,7 +37,8 @@ def test_random_perspective_transform_size_and_meta():
     assert transformed.size == img.size
     assert meta["transformer"] == "perspective"
     assert meta["method"] == "PIL.Image.Image.transform"
-    assert isinstance(meta["pa"], list) and len(meta["pa"]) == 4
+    assert isinstance(meta["pa"], list)
+    assert len(meta["pa"]) == 4
     assert len(meta["coefficients"]) == 8
 
 

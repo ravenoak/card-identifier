@@ -1,10 +1,10 @@
 import logging
 import multiprocessing as mp
 import pathlib
-from urllib.error import HTTPError
 
 import requests
-from retrying import retry
+from requests.adapters import HTTPAdapter
+from urllib3.util import Retry
 
 logger = logging.getLogger(__name__)
 
@@ -21,25 +21,22 @@ def setup_logging(debug: bool = False):
             mp_logger.addHandler(handler)
 
 
-def retry_if_http_error(e: Exception):
-    if isinstance(e, HTTPError):
-        logger.error(f"HTTP error: {e.code} {e.url}")
-        return e.code == 429
+_RETRY = Retry(total=5, status_forcelist=[429], backoff_factor=0.1)
+_SESSION = requests.Session()
+_SESSION.mount("https://", HTTPAdapter(max_retries=_RETRY))
+_SESSION.mount("http://", HTTPAdapter(max_retries=_RETRY))
+
+REQUEST_TIMEOUT = 30
 
 
-@retry(
-    retry_on_exception=retry_if_http_error,
-    wait_exponential_multiplier=100,
-    wait_exponential_max=10000,
-)
 def download_save_image(url: str, path: pathlib.Path) -> bool:
-    image = requests.get(url, allow_redirects=True)
-    logger.debug(f"downloaded image: {url}")
+    """Download ``url`` to ``path``, retrying HTTP 429 with exponential backoff."""
+    image = _SESSION.get(url, allow_redirects=True, timeout=REQUEST_TIMEOUT)
+    logger.debug("downloaded image: %s", url)
     if image.ok:
         with open(path, "wb") as file:
             file.write(image.content)
-        logger.info(f"file written: {path}")
+        logger.info("file written: %s", path)
         return True
-    else:
-        logger.error(f"error retrieving image: {url}")
-        return False
+    logger.error("error retrieving image: %s", url)
+    return False

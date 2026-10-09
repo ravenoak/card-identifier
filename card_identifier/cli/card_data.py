@@ -42,15 +42,15 @@ def card_data(
     None
         Card metadata and images are written to disk as a side effect.
     """
-    logging.info("card-data")
+    logger.info("card-data")
     if card_type == "pokemon":
         logger.info("working with Pokémon data!")
         cm = pokemon.CardManager()
         if refresh:
-            logging.info("refreshing card data")
+            logger.info("refreshing card data")
             cm.refresh_data()
         if images:
             im = pokemon.ImageManager()
-            logging.info("downloading card images")
+            logger.info("downloading card images")
             im.download_card_images(cm.card_data.values(), force)
             im.refresh_card_image_map()
