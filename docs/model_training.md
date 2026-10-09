@@ -68,4 +68,3 @@ Build arguments `USER_ID` and `USER_NAME` control the UID and user name inside
 the container.  Ports `6006` and `8888` are exposed for TensorBoard and
 Jupyter Notebook. Use this image together with `run_mkimgclsfr.sh` to train
 classifiers.
-

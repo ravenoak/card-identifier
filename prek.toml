@@ -1,0 +1,44 @@
+# Hooks run through prek (https://prek.j178.dev). Tool versions come from uv.lock.
+exclude = '^(LICENSE|notebooks/)'
+
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "trailing-whitespace" },
+  { id = "end-of-file-fixer" },
+  { id = "check-yaml" },
+  { id = "check-toml" },
+  { id = "check-added-large-files" },
+]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "ruff-check"
+name = "ruff check"
+entry = "uv run --no-sync ruff check --fix"
+language = "system"
+types_or = ["python", "pyi"]
+
+[[repos.hooks]]
+id = "ruff-format"
+name = "ruff format"
+entry = "uv run --no-sync ruff format"
+language = "system"
+types_or = ["python", "pyi"]
+
+[[repos.hooks]]
+id = "pyright"
+name = "pyright"
+entry = "uv run --no-sync pyright"
+language = "system"
+types_or = ["python", "pyi"]
+pass_filenames = false
+
+[[repos.hooks]]
+id = "pytest"
+name = "pytest"
+entry = "uv run --no-sync pytest -n auto"
+language = "system"
+pass_filenames = false

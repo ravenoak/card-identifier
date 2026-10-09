@@ -2,7 +2,7 @@ import logging
 import pathlib
 import pickle
 import shutil
-from typing import Dict, Union
+from typing import TypedDict
 
 from card_identifier.cards.pokemon import get_legal_sets
 from card_identifier.data import get_dataset_dir, get_image_dir
@@ -14,6 +14,13 @@ from .generator import (
 )
 
 logger = logging.getLogger("card_identifier.dataset")
+
+
+class CardDatasetEntry(TypedDict):
+    """Image count and paths for one card in the dataset."""
+
+    num_img: int
+    img_paths: list[pathlib.Path]
 
 
 class DatasetManager:
@@ -28,11 +35,13 @@ class DatasetManager:
         self.namespace = namespace
         self.image_dir = get_image_dir(namespace)
         self.dataset_dir = get_dataset_dir(namespace)
-        self.card_dataset_map = self.load_card_dataset_map()
+        self.card_dataset_map: dict[str, CardDatasetEntry] = (
+            self.load_card_dataset_map()
+        )
 
     def load_card_dataset_map(
         self,
-    ) -> Dict[str, Dict[str, Union[int, list[pathlib.Path]]]]:
+    ) -> dict[str, CardDatasetEntry]:
         """Load ``card_dataset_map`` from disk or return an empty mapping."""
         if self.dataset_dir.joinpath(self.CARD_IMAGE_MAP).exists():
             with open(self.dataset_dir.joinpath(self.CARD_IMAGE_MAP), "rb") as file:
@@ -45,13 +54,13 @@ class DatasetManager:
         with open(self.dataset_dir.joinpath(self.CARD_IMAGE_MAP), "wb") as file:
             pickle.dump(self.card_dataset_map, file)
 
-    def scan_dataset_dir(self) -> dict[str, dict[str, Union[int, list]]]:
+    def scan_dataset_dir(self) -> dict[str, CardDatasetEntry]:
         """Creates a map of card id to image path for all images in the dataset_dir"""
-        card_dataset_map = {}
+        card_dataset_map: dict[str, CardDatasetEntry] = {}
         for img in self.dataset_dir.glob("**/*.png"):
             rel_parts = img.relative_to(self.dataset_dir).parts
             if len(rel_parts) < 2:
-                logger.error(f"unexpected dataset path: {img}")
+                logger.error("unexpected dataset path: %s", img)
                 continue
             _id = rel_parts[1]
             if not card_dataset_map.get(_id):
@@ -95,7 +104,7 @@ class DatasetManager:
                 continue
             for card_dir in set_dir.glob("*"):
                 if not card_dir.is_dir():
-                    logger.error(f"missing card directory: {card_dir}")
+                    logger.error("missing card directory: %s", card_dir)
                     continue
                 card_id = card_dir.name
                 if training_type == "sets":
@@ -105,7 +114,7 @@ class DatasetManager:
                 dest_dir.mkdir(parents=True, exist_ok=True)
                 for img in card_dir.glob(f"*.{self.out_ext}"):
                     if not img.exists():
-                        logger.error(f"missing image file: {img}")
+                        logger.error("missing image file: %s", img)
                         continue
                     link = dest_dir.joinpath(img.name)
                     if link.exists() or link.is_symlink():
@@ -113,4 +122,4 @@ class DatasetManager:
                     try:
                         link.symlink_to(img.resolve())
                     except FileNotFoundError:
-                        logger.error(f"unable to symlink missing file: {img}")
+                        logger.error("unable to symlink missing file: %s", img)

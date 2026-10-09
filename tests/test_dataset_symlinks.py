@@ -78,5 +78,5 @@ def test_mk_symlinks_bad(tmp_path, monkeypatch):
     from card_identifier.dataset import DatasetManager
 
     dm = DatasetManager("pokemon")
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="invalid training_type"):
         dm.mk_symlinks("bad")

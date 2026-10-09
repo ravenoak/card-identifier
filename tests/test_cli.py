@@ -154,4 +154,5 @@ def test_cli_invalid_option():
     runner = CliRunner()
     result = runner.invoke(cli, ["create-dataset", "--bad"], catch_exceptions=False)
     assert result.exit_code == 2
-    assert "No such option: --bad" in result.output
+    assert "No such option" in result.output
+    assert "--bad" in result.output

@@ -1,5 +1,4 @@
 import random
-from typing import Tuple
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -9,7 +8,7 @@ from skimage.util import random_noise
 def _find_coefficients(pa, pb):
     matrix = []
     b = []
-    for (x, y), (u, v) in zip(pa, pb):
+    for (x, y), (u, v) in zip(pa, pb, strict=True):
         matrix.append([x, y, 1, 0, 0, 0, -u * x, -u * y])
         matrix.append([0, 0, 0, x, y, 1, -v * x, -v * y])
         b.extend([u, v])
@@ -21,7 +20,7 @@ def _find_coefficients(pa, pb):
     return coeffs.reshape(8)
 
 
-def _add_noise(image: Image.Image, **kwargs) -> Tuple[Image.Image, dict]:
+def _add_noise(image: Image.Image, **kwargs) -> tuple[Image.Image, dict]:
     arr = np.array(image)
     arr = random_noise(arr, **kwargs)
     arr = np.array(255 * arr, dtype="uint8")
@@ -34,7 +33,7 @@ def _add_noise(image: Image.Image, **kwargs) -> Tuple[Image.Image, dict]:
 
 def add_noise_salt_n_pepper(
     image: Image.Image, amount: float = 0.01
-) -> Tuple[Image.Image, dict]:
+) -> tuple[Image.Image, dict]:
     img, meta = _add_noise(image, mode="s&p", amount=amount)
     meta["mode"] = "s&p"
     meta["amount"] = amount
@@ -43,7 +42,7 @@ def add_noise_salt_n_pepper(
 
 def random_resize(
     image: Image.Image, resize_percent: float = 0.3
-) -> Tuple[Image.Image, dict]:
+) -> tuple[Image.Image, dict]:
     resize = (
         random.randint(
             int(100 - (resize_percent * 100)), int(100 + (resize_percent * 100))
@@ -64,7 +63,7 @@ def random_resize(
 
 def random_perspective_transform(
     img: Image.Image, wobble_percent: float = 0.2
-) -> Tuple[Image.Image, dict]:
+) -> tuple[Image.Image, dict]:
     def wobble(xy, size):
         return xy + int(
             (
@@ -106,9 +105,9 @@ def random_perspective_transform(
                 int(img.size[0] * (1 + wobble_percent)),
                 int(img.size[1] * (1 + wobble_percent)),
             ),
-            Image.PERSPECTIVE,
-            data=coefficients,
-            resample=Image.BICUBIC,
+            Image.Transform.PERSPECTIVE,
+            data=tuple(coefficients),
+            resample=Image.Resampling.BICUBIC,
             fill=0,
         ).resize((w, h)),
         {
@@ -120,7 +119,7 @@ def random_perspective_transform(
     )
 
 
-def random_add_noise(image: Image.Image) -> Tuple[Image.Image, dict]:
+def random_add_noise(image: Image.Image) -> tuple[Image.Image, dict]:
     f = [
         "salt_n_pepper",
     ]
@@ -134,7 +133,7 @@ def random_add_noise(image: Image.Image) -> Tuple[Image.Image, dict]:
     return image, meta
 
 
-def random_rotate(image: Image.Image) -> Tuple[Image.Image, dict]:
+def random_rotate(image: Image.Image) -> tuple[Image.Image, dict]:
     deg = random.randint(0, 359)
     return (
         image.rotate(deg, expand=True),
@@ -145,7 +144,7 @@ def random_rotate(image: Image.Image) -> Tuple[Image.Image, dict]:
     )
 
 
-def random_autocontrast(img: Image.Image) -> Tuple[Image.Image, dict]:
+def random_autocontrast(img: Image.Image) -> tuple[Image.Image, dict]:
     cutoff = random.randint(0, 40)
     return (
         ImageOps.autocontrast(img, cutoff),
@@ -157,7 +156,7 @@ def random_autocontrast(img: Image.Image) -> Tuple[Image.Image, dict]:
     )
 
 
-def random_posterize(img: Image.Image) -> Tuple[Image.Image, dict]:
+def random_posterize(img: Image.Image) -> tuple[Image.Image, dict]:
     bits = random.randint(1, 8)
     return (
         ImageOps.posterize(img, bits),
@@ -165,7 +164,7 @@ def random_posterize(img: Image.Image) -> Tuple[Image.Image, dict]:
     )
 
 
-def random_solarize(img: Image.Image) -> Tuple[Image.Image, dict]:
+def random_solarize(img: Image.Image) -> tuple[Image.Image, dict]:
     threshold = random.randint(1, 128)
     return (
         ImageOps.solarize(img, threshold),
@@ -177,7 +176,7 @@ def random_solarize(img: Image.Image) -> Tuple[Image.Image, dict]:
     )
 
 
-def random_random_transformer(img: Image.Image) -> Tuple[Image.Image, dict]:
+def random_random_transformer(img: Image.Image) -> tuple[Image.Image, dict]:
     xformers = [
         random_add_noise,
         random_autocontrast,

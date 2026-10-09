@@ -13,13 +13,13 @@ def save_pickle(obj: Any, path: pathlib.Path) -> None:
         pickle.dump(obj, file)
 
 
-def load_pickle(path: pathlib.Path, default: Any | None = None) -> Any | None:
+def load_pickle(path: pathlib.Path, default: Any = None) -> Any:
     """Load a pickle from *path*, returning *default* if the file is missing."""
     if path.exists():
         with open(path, "rb") as file:
-            logger.info(f"opening pickle {path}")
+            logger.info("opening pickle %s", path)
             return pickle.load(file)
-    logger.info(f"not loading pickle: missing {path}")
+    logger.info("not loading pickle: missing %s", path)
     return default
 
 

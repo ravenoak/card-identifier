@@ -39,10 +39,10 @@ Develop a dataset generator that can:
    - Additional statistical reporting on dataset diversity and transformation effectiveness.
 
 ### User Roles
-1. **Subject Matter Expert:** 
+1. **Subject Matter Expert:**
    - The primary user interacting with the application.
 
-2. **Future Roles:** 
+2. **Future Roles:**
    - Developers or data scientists who could contribute to or utilize the datasets.
 
 ### Constraints and Limitations

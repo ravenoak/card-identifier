@@ -18,7 +18,7 @@ def _setup_paths(tmp_path, monkeypatch):
 def test_save_card_dataset_map_writes_pickle(tmp_path, monkeypatch):
     dataset_dir = _setup_paths(tmp_path, monkeypatch)
     dm = DatasetManager("pokemon")
-    dm.card_dataset_map = {"c1": {"num_img": 1}}
+    dm.card_dataset_map = {"c1": {"num_img": 1, "img_paths": []}}
 
     dm.save_card_dataset_map()
 
@@ -31,7 +31,7 @@ def test_save_card_dataset_map_writes_pickle(tmp_path, monkeypatch):
 def test_load_card_dataset_map_reads_pickle(tmp_path, monkeypatch):
     dataset_dir = _setup_paths(tmp_path, monkeypatch)
     dataset_dir.mkdir(parents=True, exist_ok=True)
-    expected = {"c2": {"num_img": 2}}
+    expected = {"c2": {"num_img": 2, "img_paths": []}}
     with open(dataset_dir / DatasetManager.CARD_IMAGE_MAP, "wb") as fh:
         pickle.dump(expected, fh)
 

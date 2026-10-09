@@ -1,41 +1,86 @@
-import logging
-from urllib.error import HTTPError
+import http.server
+import threading
 
-from card_identifier.util import download_save_image, retry_if_http_error
+import pytest
 
-
-def test_retry_if_http_error_returns_true_on_429(caplog):
-    err = HTTPError(
-        url="http://example.com", code=429, msg="Too Many Requests", hdrs=None, fp=None
-    )
-    caplog.set_level(logging.ERROR)
-    assert retry_if_http_error(err) is True
-    assert any(
-        "HTTP error: 429 http://example.com" in record.message
-        for record in caplog.records
-    )
+from card_identifier.util import download_save_image
 
 
-def test_download_save_image_writes_file(tmp_path, monkeypatch):
-    """download_save_image should write the downloaded content to disk."""
+@pytest.fixture
+def server():
+    """Serve /img.png: 429 for the first ``fail_count`` requests, then 200."""
 
-    class DummyResponse:
-        def __init__(self, content: bytes):
-            self.ok = True
-            self.content = content
+    class Handler(http.server.BaseHTTPRequestHandler):
+        hits = 0
+        fail_count = 0
 
-    sample_content = b"fake image data"
+        def do_GET(self):
+            type(self).hits += 1
+            if type(self).hits <= type(self).fail_count:
+                self.send_response(429)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            body = b"fake image data"
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
 
-    def fake_get(url, allow_redirects=True):
-        assert url == "http://example.com/img.png"
-        assert allow_redirects is True
-        return DummyResponse(sample_content)
+        def log_message(self, format, *args):
+            pass
 
-    monkeypatch.setattr("card_identifier.util.requests.get", fake_get)
+    httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    yield Handler, f"http://127.0.0.1:{httpd.server_port}/img.png"
+    httpd.shutdown()
+    httpd.server_close()
+    thread.join()
 
+
+def test_download_save_image_writes_file(tmp_path, server):
+    handler, url = server
     out_path = tmp_path / "img.png"
-    result = download_save_image("http://example.com/img.png", out_path)
 
-    assert result is True
-    assert out_path.exists()
-    assert out_path.read_bytes() == sample_content
+    assert download_save_image(url, out_path) is True
+
+    assert out_path.read_bytes() == b"fake image data"
+    assert handler.hits == 1
+
+
+def test_download_save_image_retries_on_429(tmp_path, server):
+    handler, url = server
+    handler.fail_count = 2
+    out_path = tmp_path / "img.png"
+
+    assert download_save_image(url, out_path) is True
+
+    assert out_path.read_bytes() == b"fake image data"
+    assert handler.hits == 3
+
+
+def test_download_save_image_returns_false_on_http_error(tmp_path):
+    out_path = tmp_path / "img.png"
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            self.send_response(404)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def log_message(self, format, *args):
+            pass
+
+    httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        url = f"http://127.0.0.1:{httpd.server_port}/missing.png"
+        assert download_save_image(url, out_path) is False
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+        thread.join()
+
+    assert not out_path.exists()
