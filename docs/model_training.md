@@ -44,7 +44,10 @@ Running the script generates the following artifacts inside `APP_ROOT`:
 ## Dockerfiles under `deploy/`
 
 Two Dockerfiles are provided to simplify building environments for dataset
-creation and model training.
+creation and model training. With [go-task](https://taskfile.dev), build the
+images with `task dataset-container` and `task model-container`, then train
+inside the model image with
+`task make_image_classifier -- pokemon base_set`.
 
 ### `deploy/dataset_generator/Dockerfile`
 
