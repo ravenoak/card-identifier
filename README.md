@@ -29,6 +29,9 @@ uv run prek install
 The optional Streamlit demo in `scripts/streamlit` needs its own dependency
 group: `uv sync --group streamlit`.
 
+Helper tasks (container builds, model training) run with
+[go-task](https://taskfile.dev). `task --list` shows them.
+
 ## Environment Variables
 
 Several environment variables control where datasets and images are stored. They all default to sub-directories of `data` if not set.

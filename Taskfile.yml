@@ -1,0 +1,29 @@
+version: '3'
+
+vars:
+  CONTAINER_DATASET: card-identifier-dataset
+  CONTAINER_DATASET_FILE: deploy/dataset_generator/Dockerfile
+  CONTAINER_MODEL: card-identifier-model
+  CONTAINER_MODEL_FILE: deploy/model_generator/Dockerfile
+  APP_ROOT: /app
+
+tasks:
+  dataset-container:
+    desc: Build the dataset generator image
+    cmds:
+      - docker build -t "{{.CONTAINER_DATASET}}:latest" -f {{.CONTAINER_DATASET_FILE}} .
+
+  model-container:
+    desc: Build the model training image
+    cmds:
+      - docker build -t "{{.CONTAINER_MODEL}}:latest" -f {{.CONTAINER_MODEL_FILE}} .
+
+  make_image_classifier:
+    desc: "Train a classifier in the model image (task make_image_classifier -- pokemon base_set)"
+    cmds:
+      - docker run --rm -v "{{.ROOT_DIR}}:{{.APP_ROOT}}" -w {{.APP_ROOT}} -u "$(id -u):$(id -g)" {{.CONTAINER_MODEL}}:latest {{.APP_ROOT}}/scripts/run_mkimgclsfr.sh {{.CLI_ARGS}}
+
+  pokemon_sets:
+    desc: Write sorted Pokemon set list to /tmp/pokemon_sets.txt
+    cmds:
+      - uv run python scripts/pokemon_sets.py | sort > /tmp/pokemon_sets.txt
