@@ -1,9 +1,32 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import Protocol
 
-from pokemontcgsdk import Card, Set
+from pokemontcgsdk import Card
+from pokemontcgsdk.legality import Legality
+from pokemontcgsdk.querybuilder import QueryBuilder
+from pokemontcgsdk.setimage import SetImage
+
+
+@dataclass
+class PokemonSet:
+    """``pokemontcgsdk.Set`` with ``printedTotal`` optional, since the API
+    omits it for new sets and the SDK class then fails to parse them."""
+
+    RESOURCE = "sets"
+
+    id: str
+    images: SetImage
+    legalities: Legality
+    name: str
+    printedTotal: int | None
+    ptcgoCode: str | None
+    releaseDate: str
+    series: str
+    total: int
+    updatedAt: str
 
 
 class CardAPIClient(Protocol):
@@ -25,7 +48,7 @@ class PokemonTCGSDKClient:
         return Card.all()
 
     def iter_sets(self) -> Iterable:
-        return Set.all()
+        return QueryBuilder(PokemonSet).all()
 
 
 __all__ = ["CardAPIClient", "PokemonTCGSDKClient"]

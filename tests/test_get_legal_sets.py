@@ -2,23 +2,8 @@ from pokemontcgsdk.restclient import RestClient
 
 from card_identifier.cards import pokemon
 
-NEW_SET = {
-    "id": "me55c",
-    "name": "30th Celebration: Classic Collection",
-    "series": "Mega Evolution",
-    "total": 30,
-    "legalities": {"unlimited": "Legal", "standard": "Legal", "expanded": "Legal"},
-    "ptcgoCode": "30C",
-    "releaseDate": "2026/09/16",
-    "updatedAt": "2026/09/14 15:00:00",
-    "images": {
-        "symbol": "https://images.scrydex.com/pokemon/me55c-symbol/symbol",
-        "logo": "https://images.scrydex.com/pokemon/me55c-logo/logo",
-    },
-}
 
-
-def test_get_legal_sets_cached(monkeypatch):
+def test_get_legal_sets_cached(monkeypatch, new_set):
     pokemon.get_legal_sets.cache_clear()
 
     calls = []
@@ -28,7 +13,7 @@ def test_get_legal_sets_cached(monkeypatch):
         if params["page"] > 1:
             return {"data": []}
         # The API returns new sets such as me55c without printedTotal.
-        return {"data": [{**NEW_SET, "id": f"{params['q']}-id"}]}
+        return {"data": [{**new_set, "id": f"{params['q']}-id"}]}
 
     monkeypatch.setattr(RestClient, "get", staticmethod(fake_get))
 
