@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
-from pokemontcgsdk import Set
+from card_identifier.cards.pokemon import get_legal_sets
 
 
 def main():
-    targeted_sets = {s.id for s in Set.where(q="legalities.standard:legal")} | {
-        s.id for s in Set.where(q="legalities.expanded:legal")
-    }
-
-    for set_id in targeted_sets:
+    for set_id in get_legal_sets():
         print(set_id)
 
 
