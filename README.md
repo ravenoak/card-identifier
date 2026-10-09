@@ -8,30 +8,26 @@ The primary goal is to create a dataset generator that produces a diverse and ex
 
 ## Installation
 
-This project uses [Poetry](https://python-poetry.org/) to manage dependencies and requires **Python 3.10**. After cloning the repository, install the project and its dependencies by running:
+This project uses [uv](https://docs.astral.sh/uv/) to manage dependencies and
+requires **Python 3.13 or newer**. After cloning the repository, install the
+project and its development tools:
 
 ```bash
-poetry install
+uv sync
 ```
 
-After installing dependencies, enable git hooks so style checks and tests run
-automatically before each commit:
+This creates `.venv`, installs the locked runtime and `dev` dependencies, and
+makes the `mkdataset` command available through `uv run`.
+
+Enable the git hook with [prek](https://prek.j178.dev/) so ruff, pyright and
+pytest run before each commit:
 
 ```bash
-pre-commit install
+uv run prek install
 ```
 
-This will create an isolated virtual environment and install all runtime and
-development dependencies. If you prefer not to use Poetry, install the package
-with `pip` and include the `[dev]` extras:
-
-```bash
-pip install ".[dev]"
-```
-
-Using `[dev]` installs `pytest`, `ruff`, `pre-commit`, and other development
-tools. Either method will make the `mkdataset` command available in your
-environment.
+The optional Streamlit demo in `scripts/streamlit` needs its own dependency
+group: `uv sync --group streamlit`.
 
 ## Environment Variables
 
@@ -50,13 +46,13 @@ Several environment variables control where datasets and images are stored. They
 First ensure card images are downloaded. For Pokémon cards this can be done with:
 
 ```bash
-poetry run mkdataset card-data -t pokemon --images
+uv run mkdataset card-data -t pokemon --images
 ```
 
 Generate a dataset of 500 images:
 
 ```bash
-poetry run mkdataset create-dataset -t pokemon -n 500
+uv run mkdataset create-dataset -t pokemon -n 500
 ```
 
 ## Dataset Organization and Workflow
@@ -87,26 +83,27 @@ A typical workflow is:
 1. Download card metadata and images:
 
    ```bash
-   poetry run mkdataset card-data -t pokemon --refresh --images
+   uv run mkdataset card-data -t pokemon --refresh --images
    ```
 
 2. Generate randomized dataset images (populate
    `CARDIDENT_BACKGROUNDS_DIR` with background images first):
 
    ```bash
-   poetry run mkdataset create-dataset -t pokemon -n 500
+   uv run mkdataset create-dataset -t pokemon -n 500
    ```
 
 3. Trim each card directory to the desired size:
 
    ```bash
-   poetry run mkdataset trim-dataset -t pokemon -n 200
+   uv run mkdataset trim-dataset -t pokemon -n 200
    ```
 
 4. Create symlink trees for training:
 
    ```python
    from card_identifier.dataset import DatasetManager
+
    dm = DatasetManager("pokemon")
    dm.mk_symlinks("all")  # or 'legal'/'sets'
    ```
@@ -118,33 +115,30 @@ Set `CARDIDENT_DEBUG=1` to enable debug messages from all worker processes. The
 
 ## Running Tests
 
-Install the development dependencies first:
+`uv sync` installs the test dependencies. Run the test suite before committing
+changes:
 
 ```bash
-pip install -e .[dev]
-# or
-poetry install --with dev
+uv run pytest -n auto
 ```
 
-Then execute the test suite before committing changes:
+Run every check (formatting, lint, type check and tests) at once with:
 
 ```bash
-poetry run pytest -n auto
+uv run prek run --all-files
 ```
 
-The test suite depends on additional packages like `pytest-xdist`, `Pillow`, and
-`pokemontcgsdk`. These are included when installing with the `[dev]` extras.
+## Linting and Type Checking
 
-You can also run all style checks and tests at once with:
+Each check also runs on its own:
 
 ```bash
-pre-commit run --all-files
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
 ```
 
-## Linting
-
-Run Ruff to check code style and common errors:
-
-```bash
-poetry run ruff check .
-```
+[pyright](https://github.com/microsoft/pyright) reads its settings from
+`[tool.pyright]` in `pyproject.toml` and finds packages in `.venv`, so editors
+and language servers that run `pyright-langserver` from the repository root
+need no extra setup after `uv sync`.
