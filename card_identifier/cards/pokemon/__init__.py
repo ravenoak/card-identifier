@@ -1,9 +1,11 @@
 import logging
 import pathlib
 from collections.abc import Iterable
+from dataclasses import dataclass
 from functools import lru_cache
 
-from pokemontcgsdk import Card, Set
+from pokemontcgsdk import Card
+from pokemontcgsdk.querybuilder import QueryBuilder
 
 from card_identifier.cards.base import BaseCardManager
 from card_identifier.data import get_image_dir, get_pickle_dir
@@ -15,12 +17,22 @@ from .api_client import CardAPIClient, PokemonTCGSDKClient
 logger = logging.getLogger("card_identifier.pokemon")
 
 
+@dataclass
+class _SetId:
+    """Only the set ID. The SDK's ``Set`` fails to parse sets that lack
+    fields such as ``printedTotal``, which the API omits for new sets."""
+
+    RESOURCE = "sets"
+
+    id: str
+
+
 @lru_cache(maxsize=1)
 def get_legal_sets():
     """Return the set IDs that are legal in Standard or Expanded play."""
 
-    return {s.id for s in Set.where(q="legalities.standard:legal")} | {
-        s.id for s in Set.where(q="legalities.expanded:legal")
+    return {s.id for s in QueryBuilder(_SetId).where(q="legalities.standard:legal")} | {
+        s.id for s in QueryBuilder(_SetId).where(q="legalities.expanded:legal")
     }
 
 
