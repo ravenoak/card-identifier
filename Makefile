@@ -23,4 +23,4 @@ make_image_classifier:
 	docker run --rm -v $(pwd):${APP_ROOT} -w ${APP_ROOT} -u "$(id -u):$(id -g)" ${CONTAINER_MODEL}:latest /app/scripts/run_mkimgclsfr.sh
 
 pokemon_sets:
-	poetry run python scripts/pokemon_sets.py | sort > /tmp/pokemon_sets.txt
+	uv run python scripts/pokemon_sets.py | sort > /tmp/pokemon_sets.txt
