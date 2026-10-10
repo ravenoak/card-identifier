@@ -2,9 +2,14 @@
 
 ## Description
 
-The Collectable Card Identifier project focuses on generating and managing datasets to train image classifiers for identifying individual cards from various Trading Card Games (TCG) and Collectible Card Games (CCG). Starting with "Pokemon" and expanding to "Magic: The Gathering" and "YuGiOh!", this system can be used for applications like inventory management, automated sorting, and card valuation.
+The Collectable Card Identifier project identifies individual trading cards from photographs. It starts with the Pokémon TCG and is built to take Magic: The Gathering and Yu-Gi-Oh! later. It has two parts:
 
-The primary goal is to create a dataset generator that produces a diverse and extensive training dataset through various image transformations. This dataset will support the broader objective of developing a card sorting robot and other related applications.
+1. **Dataset manager.** It fetches card data and one scan per card, then generates many randomized training images per card, and selects any subset of cards for a dataset (a set, a series, only the cards legal in Standard).
+2. **Identifier.** It trains models on a selected dataset, evaluates them on real photos, and identifies cards and their labels. More than one architecture is trainable.
+
+The first consumer is a card sorting robot. Inventory and valuation tools follow.
+
+The dataset manager exists today and has known defects. The identifier is planned. Start with [docs/intent.md](docs/intent.md) for the purpose, [docs/specs/](docs/specs/) for the requirements, and the [GitHub issues](https://github.com/ravenoak/card-identifier/issues) for the backlog. [docs/README.md](docs/README.md) explains how intent, specs, decisions and issues fit together.
 
 ## Installation
 
@@ -145,3 +150,7 @@ uv run pyright
 `[tool.pyright]` in `pyproject.toml` and finds packages in `.venv`, so editors
 and language servers that run `pyright-langserver` from the repository root
 need no extra setup after `uv sync`.
+
+## Licensing and data
+
+The code is AGPL-3.0-or-later. Card images belong to their owners. This project downloads them for local training, keeps them out of git and out of container images, and does not redistribute them. Pretrained model weights carry their own licences, and some forbid commercial use. See [docs/intent.md](docs/intent.md) for the constraints.

@@ -1,0 +1,39 @@
+name: Bug
+description: Something does not behave as a spec says, or crashes.
+labels: [bug]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What is wrong, in one or two sentences. Include the command you ran.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: File and line, or the exact command and its output. Say what would show this report is wrong.
+    validations:
+      required: true
+  - type: input
+    id: reqids
+    attributes:
+      label: Requirements
+      description: ReqIDs from docs/specs this violates, for example FR-201. Write "none" if no spec covers it.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checks a reviewer can run, one per line, starting with "- [ ]".
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: "Blocked by: #N and why. Write \"None.\" if there are none."
+    validations:
+      required: true

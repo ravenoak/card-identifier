@@ -1,0 +1,32 @@
+name: Feature or task
+description: New behavior, a spec change, or maintenance work.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: The outcome from docs/intent.md this serves, and what is missing today.
+    validations:
+      required: true
+  - type: input
+    id: reqids
+    attributes:
+      label: Requirements
+      description: ReqIDs this implements. If the spec has no requirement for it, change the spec first and cite the new ID.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checks a reviewer can run, one per line, starting with "- [ ]".
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: "Blocked by: #N and why. Write \"None.\" if there are none."
+    validations:
+      required: true
