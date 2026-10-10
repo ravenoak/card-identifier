@@ -8,8 +8,10 @@ filled in when the issues are filed.
 
 ## Summary
 
-- 31 findings were examined. Verification confirmed all 31 and cleared none.
-- Two findings (`cat-api-sunset`, `trn-trainer`) were too broad to act on. They became 3 and
+- 32 findings were examined. A second model checked 30 of them: 27 CONFIRMED, 3 ESCALATE
+  (resolved below), none cleared. It found the other 2 defects, which were added. One finding
+  was held, so 31 findings were filed.
+- Two of the 31 (`cat-api-sunset`, `trn-trainer`) were too broad to act on. They became 3 and
   5 issues, so the backlog holds 37 issues. The owner chose to file all of them, above the
   filing contract's cap of 12 per run.
 - One finding was routed `hold` and not filed (`infra-local-ci`).
@@ -67,7 +69,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **priority:** P0. Blocks every catalog refresh until the TCGdex adapter lands.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-102, FR-103
+- **requirements:** none
 - **issue:** #76
 
 ### cat-sunset-spike
@@ -80,14 +82,14 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **evidence:**
   - Set id comparison, 2026-10-09: `gh api repos/PokemonTCG/pokemon-tcg-data/contents/sets/en.json` against `https://api.tcgdex.net/v2/en/sets` (176 vs 220 sets, 126 shared).
   - `curl https://api.tcgdex.net/v2/en/sets/30th-c` returns 30 cards, release date 2026-09-16, `legal.standard: false`. `tests/conftest.py:12` has `me55c` as `standard: Legal`.
-  - Card totals: 20,530 in `pokemon-tcg-data`, 23,964 in TCGdex.
+  - Set totals: 20,530 in `pokemon-tcg-data`; 21,484 in the 205 physical TCGdex sets (23,964 with the 15 TCG Pocket sets of series `tcgp`).
 - **verdict:** CONFIRMED
 - **severity:** High
 - **priority:** P0. Gates the adapter and the id migration, and the API sunset is dated.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
 - **ledger row:** split from `cat-api-sunset`
-- **requirements:** FR-104
+- **requirements:** none
 - **issue:** #77
 
 ### trn-tfhub-removed
@@ -106,7 +108,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **priority:** P1. A broken path with documentation is worse than none; cheap to remove.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-401
+- **requirements:** none
 - **issue:** #78
 
 ### gen-repro
@@ -126,7 +128,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **priority:** P1. Reproducibility is a stated goal and silently false.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-204, FR-205
+- **requirements:** FR-204, FR-205, NFR-3
 - **issue:** #79
 
 ### gen-failure-isolation
@@ -155,17 +157,17 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **domain:** selection
 - **artifact:** `card_identifier/dataset/__init__.py:97`
 - **claim:** mk_symlinks treats its own output directory as a set, and scan_dataset_dir counts linked images twice.
-- **falsifier:** After two runs of `mk_symlinks('all')`, `symlinks/all/` holds only card directories and `scan_dataset_dir()` has no key `all`.
+- **falsifier:** After one run of `mk_symlinks('all')`, `symlinks/all/` holds only card directories and `scan_dataset_dir()` has no key `all`.
 - **evidence:**
   - `card_identifier/dataset/__init__.py:97` creates `symlinks/<mode>` before `:99` globs the dataset directory.
   - `card_identifier/dataset/__init__.py:60-65` takes `rel_parts[1]` of `symlinks/all/<card>/x.png`, which is `all`.
-  - Found by code reading; the reviewer did not run the filesystem repro. The first failing test below is the repro.
+  - Code reading, then a second reviewer ran it on a temporary tree and saw `symlinks/all/all` on the first run.
 - **verdict:** CONFIRMED
 - **severity:** Medium
 - **priority:** P1. Corrupts class lists for any run after the first.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-310, FR-312
+- **requirements:** FR-312
 - **issue:** #81
 
 ### cat-resilience
@@ -180,13 +182,13 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
   - `card_identifier/util.py:24` sets `status_forcelist=[429]`; `:34-40` writes any `image.ok` body.
   - `card_identifier/cards/pokemon/__init__.py:82-85` skips an existing file unless `force`.
   - `card_identifier/storage.py:12` and `util.py:37` open the target path directly.
-  - `curl -s -w '%{http_code}' https://api.pokemontcg.io/v2/cards?pageSize=1` returned `500`, 2026-10-10 06:00 UTC.
+  - `curl -s -w '%{http_code}' https://api.pokemontcg.io/v2/cards?pageSize=1` returned `500` at 2026-10-10 06:00 UTC and `200` at 06:39.
 - **verdict:** CONFIRMED
 - **severity:** High
 - **priority:** P1. Silent corrupt downloads poison a dataset with no signal.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-110, FR-111, NFR-4, NFR-7
+- **requirements:** FR-109, FR-110, FR-111, NFR-4, NFR-7
 - **issue:** #82
 
 ### docs-training-drift
@@ -244,7 +246,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
 - **ledger row:** split from `cat-api-sunset`
-- **requirements:** FR-101, FR-102, FR-103, FR-109
+- **requirements:** FR-101, FR-102, FR-103, FR-104, FR-117
 - **issue:** #85
 
 ### cat-sunset-migrate
@@ -263,7 +265,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
 - **ledger row:** split from `cat-api-sunset`
-- **requirements:** FR-105
+- **requirements:** FR-105, NFR-3
 - **issue:** #86
 
 ### sel-legal-semantics
@@ -298,7 +300,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
   - `card_identifier/dataset/generator.py:124` uses `card_id.split("-")[0]` as the set id.
 - **verdict:** CONFIRMED
 - **severity:** High
-- **priority:** P1. Every later stage reads this; it replaces the least stable part of the system.
+- **priority:** P0. The TCGdex adapter (P0) writes into it, and every later stage reads it.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
 - **requirements:** FR-106, FR-107, FR-108, FR-112, NFR-3
@@ -337,7 +339,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **priority:** P1. Training and evaluation both depend on it.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-305, FR-306, FR-307, FR-308, FR-309, NFR-2, NFR-6
+- **requirements:** FR-305, FR-306, FR-307, FR-308, FR-309, FR-310, NFR-2, NFR-6
 - **issue:** #90
 
 ### cat-ctor-io
@@ -405,7 +407,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
   - `card_identifier/image/transformers.py:43,64` hard-code `0.3` and `0.2`.
 - **verdict:** CONFIRMED
 - **severity:** Medium
-- **priority:** P2. Needed to tune realism; unblocks manifests.
+- **priority:** P1. Blocks the manifest and the realism work.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
 - **requirements:** FR-206, FR-207, FR-213
@@ -467,13 +469,14 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 
 ### docs-data-licensing
 
-- **title:** Document where backgrounds and card images come from, and their terms
+- **title:** Document where backgrounds come from, and record each image's source
 - **domain:** docs
-- **artifact:** ``rg -i 'licen|copyright' README.md docs` finds nothing (revi`
+- **artifact:** ``rg -i background README.md` shows the directory name and no`
 - **claim:** Where backgrounds and card images come from, and the terms of use, are not written down.
-- **falsifier:** The README states the terms under which card images and backgrounds may be used.
+- **falsifier:** The README names acceptable background sources and says to record their licence.
 - **evidence:**
-  - `rg -i 'licen|copyright' README.md docs` finds nothing (reviewer check).
+  - `rg -i background README.md` shows the directory name and no source or licence guidance (docs branch).
+  - `.gitignore:2` and `.dockerignore:1` list `data/`.
   - Scrydex terms (https://scrydex.com/terms, read 2026-10-09) bar "redistribute, mirror" without authorization and extracting "models… datasets".
 - **verdict:** CONFIRMED
 - **severity:** Medium
@@ -554,25 +557,25 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
 - **ledger row:** split from `trn-trainer`
-- **requirements:** FR-404, FR-410, FR-411, FR-412
+- **requirements:** FR-404, FR-410, FR-411, FR-412, NFR-2, NFR-6
 - **issue:** #102
 
 ### trn-reference-index
 
 - **title:** Build and query a reference index; add cards without retraining
 - **domain:** training
-- **artifact:** `TCGdex lists 23,736 cards on 2026-10-09 (`curl https://api.t`
+- **artifact:** `TCGdex lists 23,736 card entries on 2026-10-09 (`curl https:`
 - **claim:** The package cannot embed reference scans or answer a nearest-neighbour query.
 - **falsifier:** A command today embeds reference scans or answers a nearest-neighbour query.
 - **evidence:**
-  - TCGdex lists 23,736 cards on 2026-10-09 (`curl https://api.tcgdex.net/v2/en/cards | jq length`).
+  - TCGdex lists 23,736 card entries on 2026-10-09 (`curl https://api.tcgdex.net/v2/en/cards | jq length`), 21,256 of them in physical sets.
 - **verdict:** CONFIRMED
 - **severity:** High
 - **priority:** P1. Turns a model into an identifier.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
 - **ledger row:** split from `trn-trainer`
-- **requirements:** FR-405, FR-406
+- **requirements:** FR-405, FR-406, NFR-2
 - **issue:** #103
 
 ### trn-classifier-baseline
@@ -583,7 +586,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **claim:** No classifier baseline exists to compare with retrieval.
 - **falsifier:** A command today trains a classifier on the card ids of a build.
 - **evidence:**
-  - The old TF Hub path trained a softmax head (`scripts/run_mkimgclsfr.sh`); nothing replaces it.
+  - The old TF Hub path trained a softmax head (`scripts/run_mkimgclsfr.sh` at `eaea9c3`; #78 deletes it); nothing replaces it.
 - **verdict:** CONFIRMED
 - **severity:** Medium
 - **priority:** P2. Gives the comparison a baseline.
@@ -625,7 +628,7 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **priority:** P2. The only honest measure of the project.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-501, FR-502, FR-503, FR-505, FR-506, FR-507
+- **requirements:** FR-501, FR-502, FR-503, FR-505, FR-506, FR-507, NFR-2
 - **issue:** #106
 
 ### trn-approach-compare
@@ -653,14 +656,14 @@ The suite passes because it avoids the failing code. See `gen-json-crash`.
 - **claim:** No command identifies a card from a photo; the only inference script is a TensorFlow Lite sample with wrong defaults.
 - **falsifier:** A command today prints a card id for a photo.
 - **evidence:**
-  - `scripts/label_image.py:55-57` defaults `input_mean` and `input_std` to 127.5; `:108` opens the image and resizes with no `convert`.
-  - `pyproject.toml:48` excludes the script from pyright; `tests/test_label_image.py` calls `--help` only.
+  - `scripts/label_image.py:55-57` (at `eaea9c3`; #78 deletes it) defaults `input_mean` and `input_std` to 127.5; `:108` opens the image and resizes with no `convert`.
+  - `pyproject.toml:48` excludes the script from pyright; `tests/test_label_image.py` calls `--help` only and is skipped when TensorFlow is missing.
 - **verdict:** CONFIRMED
 - **severity:** Medium
 - **priority:** P2. Delivers the usable identifier.
 - **dedup_check:** none found (`gh issue list --state all` returned `[]` on 2026-10-09)
 - **disposition:** file
-- **requirements:** FR-601, FR-603, FR-604, FR-605
+- **requirements:** FR-601, FR-602, FR-603, FR-604, FR-605, NFR-2
 - **issue:** #108
 
 ### gen-realism
@@ -767,9 +770,9 @@ run 1 `[194, 269, 333, 110]`, run 2 `[257, 74, 355, 66]`.
 |---|---|---|
 | 42 passed, 1 skipped | `uv run pytest -n auto -q` | `main` at `eaea9c3` |
 | 176 pokemon-tcg-data sets, 220 TCGdex sets, 126 shared ids | `gh api repos/PokemonTCG/pokemon-tcg-data/contents/sets/en.json`, `curl https://api.tcgdex.net/v2/en/sets`, then compare `id` fields | live, 2026-10-09 |
-| 20,530 vs 23,964 cards | sum of `total` in the set lists above | live, 2026-10-09 |
+| Set totals: 20,530 pokemon-tcg-data; 23,964 TCGdex, of which 21,484 in 205 physical sets | sum of `total` / `cardCount.total` in the set lists above; physical = all sets except series `tcgp` (`curl https://api.tcgdex.net/v2/en/series/tcgp`) | live, 2026-10-09 |
 | 23,736 TCGdex card entries | `curl https://api.tcgdex.net/v2/en/cards \| jq length` | live, 2026-10-09 |
-| 82 requirements | `python3 -I` over `docs/specs/*.md` counting `**FR-N.**` and `**NFR-N.**` | this branch |
+| 83 requirements | `python3 -I` over `docs/specs/*.md` counting `**FR-N.**` and `**NFR-N.**` | this branch |
 | 37 issues | `gh issue list --state all --limit 200 --json number \| jq length` | live, 2026-10-09, after filing (#75 to #111) |
 
 ## Limits
@@ -777,7 +780,7 @@ run 1 `[194, 269, 333, 110]`, run 2 `[257, 74, 355, 66]`.
 - No real card images were available on disk, so source-scan size was measured on one file
   (Scrydex `me55c-58`, 654x914). TCGdex `high` (600x825) comes from its documentation. The
   crosswalk spike measures all sources.
-- The pokemontcg.io API returned HTTP 500 on all endpoints tried, so cards from the live API were
+- The pokemontcg.io API returned HTTP 500 at 2026-10-10 06:00 UTC and 200 at 06:39, so cards from the live API were
   never parsed. `cat-card-parse` rests on the SDK source, the payload in `pokemon-tcg-data`, and the
   verifier's patched-client repro.
 - TensorFlow and PyTorch were not installed. Claims about wheels come from PyPI metadata read on
@@ -791,6 +794,26 @@ run 1 `[194, 269, 333, 110]`, run 2 `[257, 74, 355, 66]`.
 - TCGdex rate limits and image terms were not found in its documentation. The spike should
   look again.
 - Image rights: no source reviewed grants rights to card images. This is a risk statement, not a legal opinion.
+
+## Review of the filed backlog
+
+A second reviewer (Sonnet 5.5) checked the pull request and the 37 issues after filing. It
+confirmed all cited line numbers and found defects in claims, structure and wording. Applied:
+
+- Canonical ids. 4,056 of 23,736 TCGdex card ids broke the id rule (2,480 are TCG Pocket cards,
+  1,576 are physical cards with upper case or punctuation such as `pl4-AR1` and `exu-!`). The rule
+  now keeps ids as written and derives file names with `file_name(id)` (NFR-7). TCG Pocket is left
+  out (FR-117). Card counts are compared as set totals.
+- Requirements. FR-307 (shared pool keyed by config hash and seed), FR-308 (check no longer
+  contradicts a hash split), FR-310 and FR-603 (distinct commands `export-imagefolder` and
+  `export-bundle`), NFR-3 (the random-state pickles go away in the reproducibility issue), FR-206
+  and FR-213 (manifest recording belongs to FR-306), and vague terms in FR-401, FR-404, FR-408,
+  FR-603.
+- Issues. Missing blocked-by edges added, one hidden cycle removed, two priority inversions fixed
+  (the label catalog is now P0 and the generator config P1), requirement links aligned with the
+  matrix, one stale issue rewritten, wrong claims corrected (the symlink bug appears on the first
+  run; the API fails intermittently).
+- Not applied: the style comment on long sentences in requirements. Requirements keep their one-sentence form.
 
 ## Sources
 

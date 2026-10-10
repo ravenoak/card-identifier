@@ -34,7 +34,7 @@ all Fire Pokemon in Standard, everything released since 2022 except one set.
 
 ## Build manifest
 
-`builds/<name>/manifest.json`:
+`builds/<name>/manifest.json`. Variant images live in the shared pool of FR-307:
 
 | Field | Meaning |
 |---|---|
@@ -53,7 +53,7 @@ all Fire Pokemon in Standard, everything released since 2022 except one set.
 
 ## Requirements
 
-**FR-301.** THE SYSTEM SHALL accept a selection file with the keys above and SHALL reject an
+**FR-301.** THE SYSTEM SHALL accept a selection file with the keys of the selection file example and SHALL reject an
 unknown key with an error that names it.
 *Check:* parametrized tests cover each key, and a typo such as `regulation_mark` fails.
 
@@ -70,35 +70,38 @@ SYSTEM SHALL leave those cards out, print how many it left out, and fail instead
 **FR-304.** THE SYSTEM SHALL provide `select --dry-run`, which resolves a selection against
 the catalog and prints the card count, the count per set and the total variants for a given
 `images_per_card`, and writes nothing.
-*Check:* the command runs with a read-only data root.
+*Check:* on a fixture catalog the printed counts equal hand-computed values, and the command
+runs with a read-only data root.
 
 **FR-305.** THE SYSTEM SHALL provide `build`, which takes a selection, a generator config, a
 seed and `images_per_card`, generates the missing variants, and writes a manifest.
 *Check:* an end-to-end test over 3 fixture cards produces 3 times N images and one manifest.
 
-**FR-306.** THE SYSTEM SHALL record in the manifest every field listed above.
+**FR-306.** THE SYSTEM SHALL record in the manifest every field of the build manifest table.
 *Check:* a schema test validates the manifest, and a second build from the manifest's own
 inputs yields the same `files` list.
 
-**FR-307.** THE SYSTEM SHALL store each variant once and let builds reference it, so builds
-that share a card and a seed share its files.
-*Check:* two overlapping builds hold the shared card's variants once on disk.
+**FR-307.** THE SYSTEM SHALL store variants in a pool keyed by generator-config hash and
+seed, and let builds reference them, so builds that share a card, a seed and a config share its
+files.
+*Check:* two overlapping builds with one seed and config hold the shared card's variants once
+on disk. A build with another config does not reuse them.
 
 **FR-308.** THE SYSTEM SHALL assign each variant to `train`, `val` or `test` in the manifest,
 using one of two strategies: `per_card`, which splits each card's variants by fraction, and
 `by_set`, which holds out whole sets for `val` and `test`. The default is `per_card` at
 0.8, 0.1, 0.1.
-*Check:* under `per_card` every card has at least one variant in each split. Under `by_set`
-no set appears in two splits.
+*Check:* over 10,000 variants, the share in each split under `per_card` is within 2 points of
+the configured fraction. Under `by_set` no set appears in two splits.
 
 **FR-309.** THE SYSTEM SHALL assign splits from a hash of the seed and the variant's identity,
 so adding cards or variants never moves an existing variant to a different split.
 *Check:* building 100 cards, then 120, leaves the first 100 cards' assignments unchanged.
 
-**FR-310.** THE SYSTEM SHALL provide `export --layout imagefolder`, which writes a
+**FR-310.** THE SYSTEM SHALL provide `export-imagefolder`, which writes a
 class-per-directory tree of symlinks to a path outside the build's image directory, for tools
 that expect that layout.
-*Check:* running export twice gives the same tree. No directory in the tree is named
+*Check:* running `export-imagefolder` twice gives the same tree. No directory in the tree is named
 `symlinks`, `all`, `legal` or `sets`.
 
 **FR-311.** THE SYSTEM SHALL write a statistics report for a build, as JSON and Markdown, with
@@ -121,12 +124,12 @@ the set.
 What exists:
 
 - `DatasetManager.mk_symlinks(mode)` builds `symlinks/{all,legal,sets}` inside the dataset
-  directory. It also treats `symlinks/` as a set on the second run, creating empty class
-  directories named `all`, `legal` and `sets`, and `scan_dataset_dir` then counts linked images
-  twice under the card id `all` (#81).
+  directory. It also treats `symlinks/` as a set from the first run, creating an empty class
+  directory named after the mode (`symlinks/all/all`), and `scan_dataset_dir` then counts
+  linked images twice under the card id `all` (#81).
 - `legal` mode unions the Standard and Expanded sets from the live API. Standard legality
   follows a card's regulation mark (H, I and J cards are legal after the April 2026
-  rotation), and sets without legality data drop out (#87).
+  rotation, per one news source that still needs an official one), and sets without legality data drop out (#87).
 - `create-dataset --str-filter` documents a substring and matches a prefix of the card id
   (#89).
 - No manifest, no splits, no statistics (#90,
@@ -136,6 +139,6 @@ What exists:
 |---|---|
 | FR-301, FR-304, FR-313 | #89 |
 | FR-302, FR-303 | #87 |
-| FR-305 to FR-309 | #90 |
-| FR-310, FR-312 | #81 |
+| FR-305 to FR-310 | #90 |
+| FR-312 | #81 |
 | FR-311 | #93 |

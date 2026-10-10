@@ -10,10 +10,10 @@ both.
 of input files in every catalog, build, run, index, bundle and report it writes.
 *Check:* a test per artifact type finds the fields.
 
-**NFR-3.** THE SYSTEM SHALL NOT persist data with pickle, and SHALL NOT load a pickle file
-that a user supplies.
-*Check:* `grep -rn "import pickle" card_identifier` finds nothing outside a documented
-one-time migration reader.
+**NFR-3.** THE SYSTEM SHALL NOT persist data with pickle, and SHALL NOT load a pickle file,
+except in the one-time reader that migrates an old data root (FR-105).
+*Check:* `grep -rn "import pickle" card_identifier` finds only the migration reader. The
+random-state commands no longer use pickle.
 
 **NFR-4.** THE SYSTEM SHALL set a timeout and a bounded retry count on every outbound HTTP
 request.
@@ -28,10 +28,12 @@ line coverage of `card_identifier`, and the threshold is set after the first mea
 its throughput (images per second).
 *Check:* the final log lines of `build` include both numbers.
 
-**NFR-7.** THE SYSTEM SHALL validate downloaded images before use, SHALL set a maximum pixel
-count for decoding, and SHALL build file names only from ids that match
-`^[a-z0-9][a-z0-9._-]*$`.
-*Check:* a decompression-bomb fixture is rejected. An id containing `../` is refused.
+**NFR-7.** THE SYSTEM SHALL validate downloaded images before use and set a maximum pixel
+count for decoding. It SHALL build file names from card ids with `file_name(id)`, which
+percent-encodes every character outside `A-Za-z0-9._-`, refuses an empty id or one that starts
+with `.`, and fails when two ids give names that are equal after lowercasing.
+*Check:* a decompression-bomb fixture is rejected. `exu-!` and `exu-%3F` get different names,
+`a/b` becomes `a%2Fb`, `../x` is refused, and `A1` with `a1` fails.
 
 **NFR-8.** THE SYSTEM SHALL record the licence of every pretrained weight it uses, SHALL keep
 card images out of git and out of container images, and SHALL document where backgrounds
@@ -70,10 +72,11 @@ that `gen_random_dataset` reads it.
 
 | Requirement | Closed by |
 |---|---|
-| NFR-3 | #88 |
+| NFR-3 | #88, #79, #86 |
 | NFR-4, NFR-7 | #82 |
 | NFR-5, NFR-12 | #84 |
 | NFR-8 | #98 |
 | NFR-9 | #92 |
 | NFR-11 | #99 |
-| NFR-2, NFR-6 | #90 |
+| NFR-2 | #90, #102, #103, #106, #108 |
+| NFR-6 | #90, #102 |

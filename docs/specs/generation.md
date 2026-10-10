@@ -65,8 +65,8 @@ library generator.
 build still passes. The noise step takes the same generator.
 
 **FR-206.** THE SYSTEM SHALL read transform probabilities and ranges from a TOML generator
-config, SHALL ship a default config that reproduces the documented defaults, and SHALL record
-the config in the build manifest.
+config, and SHALL ship a default config that reproduces the documented defaults. The build
+manifest records the config (FR-306).
 *Check:* changing `rotate.max_degrees` in a config changes the rotations in a build.
 
 **FR-207.** WHEN the config enables color or noise transforms, THE SYSTEM SHALL apply them
@@ -103,7 +103,7 @@ reports one orphan.
 
 **FR-213.** THE SYSTEM SHALL produce images at a configured square size and format, defaulting
 to 224 pixels and PNG.
-*Check:* a config with `size = 256` yields 256x256 images, recorded in the manifest.
+*Check:* a config with `size = 256` yields 256x256 images.
 
 **FR-214.** THE SYSTEM SHALL provide optional realism transforms for glare, blur, lighting
 gradient, JPEG compression, sleeve reflection and partial occlusion, each controlled by the

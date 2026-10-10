@@ -45,7 +45,8 @@ and SHALL refuse reports that used different photo-label hashes.
 
 **FR-505.** THE SYSTEM SHALL label every metric computed on synthetic validation images as
 synthetic and SHALL NOT place it in the headline table.
-*Check:* the Markdown report separates "Real photos" from "Synthetic validation".
+*Check:* the Markdown report separates "Real photos" from "Synthetic validation", and a metric
+computed on synthetic images appears only under the second heading.
 
 **FR-506.** WHEN a photo's best match scores below a threshold, THE SYSTEM SHALL return
 "unknown", SHALL report the unknown rate for in-index and out-of-index photos, and SHALL

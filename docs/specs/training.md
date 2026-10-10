@@ -54,7 +54,8 @@ The backbone name and loss shown are examples. The registry decides what exists.
 ## Requirements
 
 **FR-401.** THE SYSTEM SHALL provide `train`, which takes a run config, and SHALL stop before
-training when the manifest is missing or a sampled file's SHA-256 differs from the manifest.
+training when the manifest is missing or the SHA-256 of any of 100 files, chosen by seed (all
+files if fewer), differs from the manifest.
 *Check:* a test with a tampered file stops with a message naming the file.
 
 **FR-402.** THE SYSTEM SHALL keep a backbone registry in which each entry holds the registry
@@ -71,7 +72,8 @@ metadata.
 
 **FR-404.** WHEN the head is `embedding`, THE SYSTEM SHALL train an embedding on the `train`
 split with a metric-learning loss chosen in the config, SHALL support a schedule that freezes
-the backbone for the first epochs, and SHALL compute a validation metric each epoch.
+the backbone for the first epochs, and SHALL compute a validation metric each epoch: top-1 retrieval accuracy of `val` variants
+against `train` reference embeddings.
 *Check:* a 2-epoch run on 20 fixture cards lowers the training loss and writes a metric per
 epoch.
 
@@ -91,9 +93,9 @@ write a label map.
 *Check:* the same config with `head = "classifier"` trains and reports top-1 on `val`.
 
 **FR-408.** THE SYSTEM SHALL resolve set, name, rarity, category, types, regulation mark and
-legality of an identified card from the catalog, and MAY train auxiliary heads that predict
-set, rarity and category directly, enabled by config, for photos whose card is not in the
-index.
+legality of an identified card from the catalog, and, when the config enables it, SHALL train
+auxiliary heads that predict set, rarity and category directly, for photos whose card is not
+in the index.
 *Check:* an identification result lists all card labels of the matched card. With auxiliary
 heads on, the run reports their accuracy.
 

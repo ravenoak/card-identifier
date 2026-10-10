@@ -4,7 +4,8 @@ The catalog is the local record of every card and set, with the card labels the 
 report. The image store holds one reference scan per card. Both are filled from a card source
 through an adapter.
 
-Intent: outcome 1 (trusted card data) in [intent.md](../intent.md). Decisions:
+Intent: outcome 1 (trusted card data) in [intent.md](../intent.md). The file names below follow
+ADR 0005, which is Proposed. Decisions:
 [ADR 0004](../adr/0004-tcgdex-as-card-data-source.md),
 [ADR 0005](../adr/0005-catalog-and-manifests-as-json-or-parquet.md).
 
@@ -16,11 +17,11 @@ a missing key, so readers see a stable shape.
 | Field | Type | Notes |
 |---|---|---|
 | `schema_version` | int | Starts at 1 |
-| `id` | string | Canonical card id, for example `swsh3-136`. Matches `^[a-z0-9][a-z0-9._-]*$`, so it is safe as a file name |
+| `id` | string | Canonical card id: the TCGdex id as written, for example `swsh3-136`, `pl4-AR1` or `exu-!`. Case and punctuation are kept. File names come from it by `file_name(id)` (NFR-7), never from the raw id |
 | `game` | string | `pokemon` |
 | `name` | string | |
 | `set_id` | string | Canonical set id. Taken from the set record, never parsed from `id` |
-| `number` | string | Collector number as printed, for example `136` or `TG05` |
+| `number` | string | Collector number as the source gives it, for example `136` or `TG05`. TCGdex pads some numbers (`001`) |
 | `category` | string | `Pokemon`, `Trainer` or `Energy` |
 | `subtypes` | list of string | For example `Basic`, `Stage 1`, `Supporter` |
 | `types` | list of string | Energy types. Empty for Trainer and Energy |
@@ -73,16 +74,15 @@ bad record, and exits 1.
 
 **FR-104.** THE SYSTEM SHALL use the TCGdex card id as the canonical card id and the TCGdex
 set id as the canonical set id.
-*Check:* the crosswalk spike (#77) lists every id that differs from a
-legacy id. The catalog holds no two cards with one canonical id.
+*Check:* the catalog holds no two cards with one canonical id. The crosswalk
+report from spike #77 lists every id that differs from a legacy id.
 
 **FR-105.** THE SYSTEM SHALL keep every earlier id of a card in `legacy_ids` and SHALL provide
 a lookup from any legacy id to the canonical id.
-*Check:* all card ids in an existing `card_image_map` resolve, or appear in a printed list of
-unmapped ids. Existing dataset directories can be renamed from that lookup
-(#86).
+*Check:* a fixture map of 5 legacy ids, 4 of them known, resolves 4 and prints the fifth as
+unmapped. Existing dataset directories are renamed from that lookup (#86).
 
-**FR-106.** THE SYSTEM SHALL store a card label record, as defined above, for every card the
+**FR-106.** THE SYSTEM SHALL store a card label record, as defined in the card label record table, for every card the
 source lists.
 *Check:* a schema test validates each stored record, and a count test compares the catalog
 with the source's card count.
@@ -135,6 +135,11 @@ and THE SYSTEM SHALL keep `data/` out of git and out of container images.
 *Check:* `.gitignore` and `.dockerignore` cover `data/`. The README states that images are
 for local training and are not redistributed.
 
+**FR-117.** THE SYSTEM SHALL leave out cards and sets of digital-only products (for TCGdex,
+the series `tcgp`, Pokemon TCG Pocket) unless the config includes them.
+*Check:* a fixture with one `tcgp` set and one physical set stores only the physical set and
+prints how many sets it left out.
+
 ## Current state and gaps
 
 What exists:
@@ -143,7 +148,7 @@ What exists:
   It fails on cards from new sets, because the SDK requires `legalities` and the embedded set's
   `printedTotal` (#76).
 - `ImageManager` downloads `card.images.large` to `<id>.png` and pickles an id-to-file map.
-  Downloads have no timeout on the SDK side, retry only HTTP 429, and accept any 200 body
+  Downloads have no timeout on the SDK side, retry network errors but only HTTP 429 among status codes, and accept any 200 body
   (#82).
 - Two different files named `card_image_map.pickle` exist, one in `barrel/<game>/` and one in
   the dataset directory (#88).
@@ -156,8 +161,8 @@ What exists:
 
 | Requirement | Closed by |
 |---|---|
-| FR-101, FR-102, FR-103, FR-109 | #85 |
-| FR-104 | #77 |
+| FR-101, FR-102, FR-103, FR-104, FR-117 | #85 |
+| FR-109 | #82 |
 | FR-105 | #86 |
 | FR-106, FR-107, FR-108, FR-112 | #88 |
 | FR-110, FR-111 | #82 |

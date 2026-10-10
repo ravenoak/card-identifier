@@ -20,7 +20,8 @@ The owner wants several architectures trainable and comparable.
 ## Decision
 Use PyTorch for training and timm for backbones. Keep the backbone choice in a registry
 ([FR-402](../specs/training.md)). Export to ONNX for consumers ([FR-603](../specs/inference.md)).
-Retire the TensorFlow Hub script, the model container and the notebooks that depend on them.
+Retire the TensorFlow Hub script and the model container (#78). The notebooks that depend on
+them are fixed or removed under #110.
 
 ### Alternatives considered
 - **Keras 3 on TensorFlow.** Keeps the TFLite path. Rejected: it caps the trainer at Python

@@ -10,17 +10,21 @@ The catalog reads cards through `pokemontcgsdk` from pokemontcg.io. Facts on 202
   2027" and calls it legacy. The home page says it is now part of Scrydex.
 - `pokemontcgsdk` 3.4.0 was last released on 2021-12-21. It requires `legalities` and, in the
   embedded set, `printedTotal`, so it cannot parse cards from new sets such as `me55c`.
-- The API returned HTTP 500 on every endpoint tried at 2026-10-10 06:00 UTC.
+- The API returned HTTP 500 on `/v2/cards` at 2026-10-10 06:00 UTC and 200 on the same
+  request at 06:39, so it fails intermittently.
 - Scrydex is the stated successor, with compatible ids. Its pricing page lists no free tier
   (Starter: $29 a month for 5,000 credits). Its terms bar redistributing or mirroring data and
   extracting datasets.
 - TCGdex is free, needs no key, and its card database is MIT-licensed
   (`tcgdex/cards-database`, last commit 2026-10-06). Its set list held 220 sets and its card
-  list 23,736 entries on 2026-10-09. A card record carries `regulationMark`, `legal.standard`,
+  list 23,736 entries on 2026-10-09. Of these, 15 sets (series `tcgp`, Pokemon TCG Pocket, a
+  digital game) hold 2,480 entries, leaving 205 physical sets and 21,256 cards. The catalog
+  leaves the digital sets out (FR-117). A card record carries `regulationMark`, `legal.standard`,
   `legal.expanded` and `illustrator`. Images come at `high` (600x825 per its docs) and `low`.
 - Set ids differ between the two sources: of 176 `pokemon-tcg-data` set ids, 126 exist in
   TCGdex. `sv1` to `sv9`, `me1` to `me5` and `me55c` do not (TCGdex uses `sv01`, `me01` and
-  `30th-c`), and 18 shared ids disagree on card totals.
+  `30th-c`), and 18 shared ids disagree on card totals. Set totals sum to 20,530 in `pokemon-tcg-data` and
+  21,484 in TCGdex physical sets.
 - The sources also disagree on facts. TCGdex `30th-c` matches `me55c` by release date
   (2026-09-16) and size (30 cards), but it lists the set as not Standard-legal, where the
   pokemontcg.io payload in `tests/conftest.py` says Legal. TCGdex pads card numbers

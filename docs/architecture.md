@@ -73,7 +73,7 @@ rename.
 ## Data layout
 
 All data lives under `CARDIDENT_DATA_ROOT` (default `data`). Nothing under it is committed or
-copied into a container image.
+copied into a container image. The file formats follow ADR 0005 and ADR 0006, both Proposed.
 
 ```
 data/
@@ -83,10 +83,10 @@ data/
     images.jsonl           reference scan index: file, sha256, size, source URL (FR-112)
   images/originals/<game>/<card-id>.png      reference scans
   backgrounds/                               owner-supplied background images
+  variants/<config-hash>-<seed>/<set-id>/<card-id>/<hash>.png     shared pool (FR-307), with <hash>.json sidecars
   builds/<name>/
     manifest.json          selection, seed, config hash, code version, counts (FR-306)
     config.toml            generator config used
-    images/<set-id>/<card-id>/<hash>.png      variants, with <hash>.json sidecars
   runs/<name>/
     config.toml, metrics.jsonl, checkpoints/, model-card.json      (FR-411)
   indexes/<name>/

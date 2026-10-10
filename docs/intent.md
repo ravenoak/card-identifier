@@ -22,8 +22,8 @@ A card sorting robot is the first consumer. Inventory, sorting and valuation too
 
 ## Why this approach
 
-Only one clean scan exists per card, and there are about 20,000 Pokemon cards (20,530 in
-pokemon-tcg-data, 23,964 in TCGdex, both on 2026-10-09). No labeled photo set exists. So the
+Only one clean scan exists per card, and there are about 21,000 Pokemon cards (set totals on 2026-10-09:
+20,530 in pokemon-tcg-data, 21,484 in TCGdex without its 15 TCG Pocket sets). No labeled photo set exists. So the
 project makes synthetic photos from the scans, trains on them, and measures on a small set of
 real photos. New sets appear several times a year, so adding a set must not mean retraining
 from scratch. [ADR 0003](adr/0003-retrieval-first-identification.md) records the answer:

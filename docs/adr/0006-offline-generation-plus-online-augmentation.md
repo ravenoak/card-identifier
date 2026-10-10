@@ -15,7 +15,8 @@ widens variety at no disk cost, but leaves no record of what the model saw.
 Keep offline generation for the geometry and scene the project cares about: perspective,
 rotation, background, placement, glare and occlusion. These are recorded in sidecars and the
 manifest. Add online augmentation in the training loader for cheap photometric changes only
-(color jitter, small blur, random crop), seeded and recorded in the run config
+(color jitter, small blur, random crop), seeded and recorded in the run config. Camera
+effects such as glare, defocus and motion blur stay offline (FR-214) so the sidecar records them
 ([FR-409](../specs/training.md)).
 
 ### Alternatives considered
